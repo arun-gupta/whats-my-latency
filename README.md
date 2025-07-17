@@ -20,6 +20,7 @@
 - **"Center on Me"**: Instantly center the map on your location
 - **Responsive design**: Works great on desktop, tablet, and mobile
 - **Cloudflare Turnstile**: Privacy-first, user-friendly CAPTCHA to protect stats submission from bots and abuse
+- **Automatic CI/CD:** Every push to GitHub automatically deploys the latest version to Cloudflare Pages, ensuring the [live demo](https://whats-my-latency.pages.dev/) is always up to date.
 
 ---
 
