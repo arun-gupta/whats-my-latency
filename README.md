@@ -19,6 +19,7 @@
 - **Error handling & feedback**: Loading spinner, error messages, and user notifications
 - **"Center on Me"**: Instantly center the map on your location
 - **Responsive design**: Works great on desktop, tablet, and mobile
+- **Cloudflare Turnstile**: Privacy-first, user-friendly CAPTCHA to protect stats submission from bots and abuse
 
 ---
 
@@ -190,3 +191,30 @@ Below is a screenshot of the main page:
 ---
 
 **Enjoy measuring your latency around the world!** 
+
+---
+
+## 🛡️ Cloudflare Turnstile Integration
+
+This project uses [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) to protect the stats submission endpoint from abuse and bots.
+
+### How to Set Up Turnstile
+
+1. **Register your site** in the [Cloudflare Turnstile dashboard](https://dash.cloudflare.com/?to=/:account/turnstile) and get your **Site Key** and **Secret Key**.
+2. **Frontend:**
+   - In `frontend/index.html`, set your Site Key in the Turnstile widget:
+     ```html
+     <div class="cf-turnstile" data-sitekey="YOUR_SITE_KEY_HERE"></div>
+     ```
+   - (You have already set: `0x4AAAAAABlib5O3WAAktnD7`)
+3. **Worker:**
+   - In `cloudflare-worker/wrangler.toml`, add your Secret Key as an environment variable:
+     ```toml
+     [vars]
+     TURNSTILE_SECRET_KEY = "YOUR_SECRET_KEY_HERE"
+     ```
+   - The Worker will use this to verify Turnstile tokens on the `/stats` endpoint.
+
+**Note:** Never expose your Secret Key in frontend code or public repos.
+
+--- 
