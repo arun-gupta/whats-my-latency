@@ -28,6 +28,10 @@ const endpoints = [
     url: 'https://3fsen4xjk6.execute-api.us-west-1.amazonaws.com/default/latency-usw1',
     label: 'AWS Lambda us-west-1',
   },
+  {
+    url: 'https://fkvpl9lqs8.execute-api.ap-southeast-1.amazonaws.com/default/latency-apse1',
+    label: 'AWS Lambda ap-southeast-1',
+  },
 ];
 
 const NUM_TESTS = 1; // Only one test per endpoint now
@@ -86,6 +90,7 @@ const regionCoords = {
   'sa-east-1': [-23.5505, -46.6333],    // São Paulo
   'ca-central-1': [45.4215, -75.6997],  // Montreal
   'us-west-1': [37.3382, -121.8863],    // N. California
+  'ap-southeast-1': [1.3521, 103.8198], // Singapore
 };
 
 function getRegionFromLabel(label) {
