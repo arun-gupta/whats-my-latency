@@ -1,7 +1,21 @@
+:root {
+  --bg: #181818;
+  --fg: #00ff00;
+  --accent: #00ff00;
+  --table-bg: #181818;
+  --table-fg: #b5ffb5;
+  --border: #00ff00;
+  --button-bg: #111;
+  --button-fg: #00ff00;
+  --button-hover-bg: #00ff00;
+  --button-hover-fg: #181818;
+  --font: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+}
+
 body {
-  background: #181818;
-  color: #00ff00;
-  font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
   margin: 0;
   min-height: 100vh;
 }
@@ -13,43 +27,44 @@ body {
   border-radius: 8px;
   box-shadow: 0 0 24px #000a;
   padding: 2rem 2.5rem 2.5rem 2.5rem;
-  border: 2px solid #00ff00;
+  border: 2px solid var(--border);
 }
 
 h1 {
-  color: #00ff00;
+  color: var(--accent);
   font-size: 2.2rem;
   margin-bottom: 0.5rem;
   letter-spacing: 1px;
 }
 
 p {
-  color: #b5ffb5;
+  color: var(--table-fg);
   margin-bottom: 1.5rem;
 }
 
-button#retest-btn {
-  background: #111;
-  color: #00ff00;
-  border: 1px solid #00ff00;
+button#retest-btn, button#theme-toggle-btn {
+  background: var(--button-bg);
+  color: var(--button-fg);
+  border: 1px solid var(--accent);
   font-family: inherit;
   font-size: 1rem;
   padding: 0.5rem 1.2rem;
   border-radius: 4px;
   cursor: pointer;
   margin-bottom: 1.5rem;
+  margin-right: 0.5rem;
   transition: background 0.2s, color 0.2s;
 }
-button#retest-btn:hover {
-  background: #00ff00;
-  color: #181818;
+button#retest-btn:hover, button#theme-toggle-btn:hover {
+  background: var(--button-hover-bg);
+  color: var(--button-hover-fg);
 }
 
 table#latency-table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 2rem;
-  background: #181818;
+  background: var(--table-bg);
 }
 table#latency-table th, table#latency-table td {
   padding: 0.7rem 0.5rem;
@@ -57,12 +72,12 @@ table#latency-table th, table#latency-table td {
   border-bottom: 1px solid #333;
 }
 table#latency-table th {
-  color: #00ff00;
+  color: var(--accent);
   font-size: 1.1rem;
-  border-bottom: 2px solid #00ff00;
+  border-bottom: 2px solid var(--accent);
 }
 table#latency-table td {
-  color: #b5ffb5;
+  color: var(--table-fg);
   font-size: 1rem;
 }
 
@@ -82,12 +97,53 @@ table#latency-table td {
 
 #leaderboard-map {
   margin-top: 2rem;
-  color: #00ff00;
+  color: var(--accent);
   min-height: 60px;
   text-align: center;
   font-size: 1.1rem;
-  border: 1px dashed #00ff00;
+  border: 1px dashed var(--accent);
   border-radius: 6px;
   padding: 1rem;
-  background: #181818;
+  background: var(--table-bg);
+}
+
+/* Themes */
+body.theme-matrix {
+  --bg: #000;
+  --fg: #39ff14;
+  --accent: #39ff14;
+  --table-bg: #000;
+  --table-fg: #b5ffb5;
+  --border: #39ff14;
+  --button-bg: #111;
+  --button-fg: #39ff14;
+  --button-hover-bg: #39ff14;
+  --button-hover-fg: #000;
+  --font: 'Share Tech Mono', 'Fira Mono', 'Consolas', monospace;
+}
+body.theme-classic {
+  --bg: #181818;
+  --fg: #ffcc00;
+  --accent: #ffcc00;
+  --table-bg: #181818;
+  --table-fg: #fff7d6;
+  --border: #ffcc00;
+  --button-bg: #222;
+  --button-fg: #ffcc00;
+  --button-hover-bg: #ffcc00;
+  --button-hover-fg: #181818;
+  --font: 'Courier New', 'Consolas', monospace;
+}
+body.theme-light {
+  --bg: #f7f7f7;
+  --fg: #222;
+  --accent: #0074d9;
+  --table-bg: #fff;
+  --table-fg: #222;
+  --border: #0074d9;
+  --button-bg: #fff;
+  --button-fg: #0074d9;
+  --button-hover-bg: #0074d9;
+  --button-hover-fg: #fff;
+  --font: 'Fira Mono', 'Consolas', 'Menlo', monospace;
 } 

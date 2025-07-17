@@ -127,5 +127,29 @@ async function runTests() {
 
 retestBtn.addEventListener('click', runTests);
 
+const THEMES = ['matrix', 'classic', 'light'];
+let currentThemeIdx = 0;
+
+function applyTheme(theme) {
+  document.body.classList.remove(...THEMES.map(t => 'theme-' + t));
+  document.body.classList.add('theme-' + theme);
+  localStorage.setItem('latency-theme', theme);
+}
+
+function cycleTheme() {
+  currentThemeIdx = (currentThemeIdx + 1) % THEMES.length;
+  applyTheme(THEMES[currentThemeIdx]);
+}
+
+function loadTheme() {
+  const saved = localStorage.getItem('latency-theme');
+  const idx = THEMES.indexOf(saved);
+  currentThemeIdx = idx >= 0 ? idx : 0;
+  applyTheme(THEMES[currentThemeIdx]);
+}
+
+document.getElementById('theme-toggle-btn').addEventListener('click', cycleTheme);
+loadTheme();
+
 // Run on load
 runTests(); 
