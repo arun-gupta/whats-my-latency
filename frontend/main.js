@@ -348,6 +348,7 @@ async function runTests() {
     updateTable(results);
     lastResults = results;
     await updateMap(results);
+    await replayWarGamesAnimation(); // Restore WarGames animation after map update
     if (results.some(r => r.error)) {
       setFeedbackMessage('Some regions could not be reached. See ⚠️ in table.', 'error');
     } else {
