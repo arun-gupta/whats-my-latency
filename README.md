@@ -12,6 +12,32 @@ This repository provides a tool for:
 - A Cloudflare Worker is deployed to the edge and returns its POP location and timestamp in a JSON response.
 - The frontend (coming soon) will make parallel requests to the Worker, measure roundtrip times, and display the results in a terminal-inspired UI.
 
+## Phase 1: Test the Worker Endpoint
+
+You can test the backend by visiting this URL in your browser or with `curl`:
+
+```
+https://whats-my-latency-worker.<your-subdomain>.workers.dev
+```
+
+Replace `<your-subdomain>` with your Cloudflare workers.dev subdomain (see the README section above for how to find it).
+
+### What to Expect
+You will receive a JSON response like this:
+
+```json
+{
+  "pop": "SFO",
+  "timestamp": "2024-06-10T18:00:00Z",
+  "cf_ray": "7a1b2c3d4e5f1234-SFO",
+  "country": "US"
+}
+```
+- `pop`: The Cloudflare edge location that handled your request (e.g., SFO, LHR)
+- `timestamp`: The UTC time the request was processed
+- `cf_ray`: The Cloudflare Ray ID (includes POP code)
+- `country`: The detected country code
+
 ## Project Phases
 ### Phase 1 (Complete)
 - Cloudflare Worker backend that returns POP, timestamp, and related info
