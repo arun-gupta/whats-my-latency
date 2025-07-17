@@ -78,6 +78,183 @@ async function testLatency(endpoint, testNum) {
   };
 }
 
+// Coordinates for AWS Lambda regions
+const regionCoords = {
+  'us-east-1': [37.7749, -77.0369],      // N. Virginia
+  'ap-south-1': [19.0760, 72.8777],     // Mumbai
+  'eu-central-1': [50.1109, 8.6821],    // Frankfurt
+  'sa-east-1': [-23.5505, -46.6333],    // São Paulo
+  'ca-central-1': [45.4215, -75.6997],  // Montreal
+  'us-west-1': [37.3382, -121.8863],    // N. California
+};
+
+function getRegionFromLabel(label) {
+  const match = label.match(/([a-z]{2}-[a-z]+-\d)/);
+  return match ? match[1] : null;
+}
+
+function getBrowserLocation() {
+  return new Promise((resolve) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve([pos.coords.latitude, pos.coords.longitude]),
+        () => resolve(null),
+        { timeout: 3000 }
+      );
+    } else {
+      resolve(null);
+    }
+  });
+}
+
+let map, markers = [], lines = [];
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function addPulseMarker(map, coord) {
+  const divIcon = L.divIcon({
+    className: 'pulse-marker',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    html: '<div class="pulse"></div>'
+  });
+  return L.marker(coord, { icon: divIcon }).addTo(map);
+}
+
+let lastResults = [];
+
+async function animateWarGamesLines(regionMarkers, browserLoc) {
+  for (let i = 0; i < regionMarkers.length; i++) {
+    const { coord, marker, label } = regionMarkers[i];
+    const animLine = L.polyline([coord, browserLoc], {
+      color: '#39ff14', weight: 5, opacity: 0.9, className: 'wargames-glow'
+    }).addTo(map);
+    const pulse = addPulseMarker(map, browserLoc);
+    marker.openPopup();
+    await sleep(500);
+    map.removeLayer(animLine);
+    map.removeLayer(pulse);
+    const line = L.polyline([coord, browserLoc], {
+      color: '#00ff00', weight: 2, opacity: 0.7
+    }).addTo(map);
+    lines.push(line);
+    marker.closePopup();
+  }
+}
+
+async function animateSingleWarGamesLine(coord, marker, browserLoc) {
+  // Remove all lines
+  lines.forEach(l => map.removeLayer(l));
+  lines = [];
+  // Glowing green line
+  const animLine = L.polyline([coord, browserLoc], {
+    color: '#39ff14', weight: 5, opacity: 0.9, className: 'wargames-glow'
+  }).addTo(map);
+  const pulse = addPulseMarker(map, browserLoc);
+  marker.openPopup();
+  await sleep(500);
+  map.removeLayer(animLine);
+  map.removeLayer(pulse);
+  const line = L.polyline([coord, browserLoc], {
+    color: '#00ff00', weight: 2, opacity: 0.7
+  }).addTo(map);
+  lines.push(line);
+  marker.closePopup();
+}
+
+async function replayWarGamesAnimationForMarker(coord, marker) {
+  const browserLoc = await getBrowserLocation();
+  if (browserLoc && coord) {
+    await animateSingleWarGamesLine(coord, marker, browserLoc);
+  }
+}
+
+async function replayWarGamesAnimation() {
+  if (!lastResults.length) return;
+  // Remove all lines
+  lines.forEach(l => map.removeLayer(l));
+  lines = [];
+  // Get browser location
+  const browserLoc = await getBrowserLocation();
+  // Prepare region markers
+  const regionMarkers = [];
+  lastResults.forEach(result => {
+    let coord = null;
+    let markerLabel = result.label;
+    let region = getRegionFromLabel(result.label);
+    if (region && regionCoords[region]) {
+      coord = regionCoords[region];
+      markerLabel = `${result.label}`;
+    }
+    if (coord && region && result._marker) {
+      regionMarkers.push({ coord, marker: result._marker, label: markerLabel });
+    }
+  });
+  if (browserLoc && regionMarkers.length > 0) {
+    await animateWarGamesLines(regionMarkers, browserLoc);
+  }
+}
+
+async function updateMap(results) {
+  if (!map) {
+    map = L.map('latency-map').setView([20, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 8,
+      minZoom: 2,
+    }).addTo(map);
+  }
+  // Remove old markers/lines
+  markers.forEach(m => map.removeLayer(m));
+  lines.forEach(l => map.removeLayer(l));
+  markers = [];
+  lines = [];
+
+  // Get browser location
+  const browserLoc = await getBrowserLocation();
+  let browserMarker = null;
+  if (browserLoc) {
+    browserMarker = L.marker(browserLoc, { title: 'Your Location' }).addTo(map);
+    browserMarker.bindPopup('Your Location').openPopup();
+    markers.push(browserMarker);
+  }
+
+  // Prepare region markers
+  const regionMarkers = [];
+  results.forEach(result => {
+    let coord = null;
+    let markerLabel = result.label;
+    let region = getRegionFromLabel(result.label);
+    if (region && regionCoords[region]) {
+      coord = regionCoords[region];
+      markerLabel = `${result.label}`;
+    } else if (result.label.includes('Cloudflare')) {
+      coord = browserLoc;
+      markerLabel = 'Your Location (Cloudflare Edge)';
+    }
+    if (coord && region) {
+      const latency = result.latency !== null ? result.latency.toFixed(1) + ' ms' : 'Error';
+      const popup = `<b>${markerLabel}</b><br>Latency: ${latency}`;
+      const marker = L.marker(coord, { title: markerLabel }).addTo(map);
+      marker.bindPopup(popup);
+      markers.push(marker);
+      regionMarkers.push({ coord, marker, label: markerLabel });
+      // Attach click event to animate only this line
+      marker.on('click', () => replayWarGamesAnimationForMarker(coord, marker));
+      // Store marker reference for replay
+      result._marker = marker;
+    }
+  });
+  // Save results for replay
+  lastResults = results;
+  // Animate lines WarGames style (all) on initial load
+  if (browserLoc && regionMarkers.length > 0) {
+    await animateWarGamesLines(regionMarkers, browserLoc);
+  }
+}
+
 async function runTests() {
   tableBody.innerHTML = '';
   leaderboardMap.textContent = 'Testing...';
@@ -123,6 +300,8 @@ async function runTests() {
   } else {
     leaderboardMap.textContent = 'No successful results.';
   }
+  // Update map
+  updateMap(results);
 }
 
 retestBtn.addEventListener('click', runTests);

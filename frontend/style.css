@@ -146,4 +146,23 @@ body.theme-light {
   --button-hover-bg: #0074d9;
   --button-hover-fg: #fff;
   --font: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+}
+
+/* WarGames animation styles */
+.wargames-glow {
+  filter: drop-shadow(0 0 8px #39ff14) drop-shadow(0 0 16px #39ff14);
+}
+.pulse-marker .pulse {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(57,255,20,0.3);
+  position: relative;
+  animation: pulse 0.7s infinite;
+  border: 2px solid #39ff14;
+}
+@keyframes pulse {
+  0% { transform: scale(0.7); opacity: 0.7; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.7); opacity: 0.7; }
 } 

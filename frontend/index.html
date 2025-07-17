@@ -6,6 +6,7 @@
   <title>What's My Latency?</title>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="favicon.ico">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
   <div class="terminal-container">
@@ -28,7 +29,9 @@
     <div id="leaderboard-map">
       <!-- Map or leaderboard placeholder -->
     </div>
+    <div id="latency-map" style="height: 400px; margin-top: 2rem; border-radius: 8px; overflow: hidden;"></div>
   </div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="main.js"></script>
 </body>
 </html> 
