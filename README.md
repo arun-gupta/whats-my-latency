@@ -17,10 +17,8 @@ This repository provides a tool for:
 You can test the backend by visiting this URL in your browser or with `curl`:
 
 ```
-https://whats-my-latency-worker.<your-subdomain>.workers.dev
+https://whats-my-latency-worker.arungupta.workers.dev
 ```
-
-Replace `<your-subdomain>` with your Cloudflare workers.dev subdomain (see the README section above for how to find it).
 
 ### What to Expect
 You will receive a JSON response like this:
