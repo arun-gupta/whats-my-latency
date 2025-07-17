@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Latency Trends – What's My Latency?</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { background: #181818; color: #00ff00; font-family: 'Fira Mono', monospace; }
+    .trends-container { max-width: 800px; margin: 40px auto; background: #222; border-radius: 8px; box-shadow: 0 0 24px #000a; padding: 2rem; border: 2px solid #00ff00; }
+    h1 { color: #39ff14; text-align: center; }
+    a { color: #39ff14; }
+  </style>
+</head>
+<body>
+  <div class="trends-container">
+    <h1>Latency Trends (Last 100 Results)</h1>
+    <canvas id="latency-trend-chart" width="700" height="350" style="background:#111; border-radius:8px;"></canvas>
+    <div style="text-align:center; margin-top:2em;">
+      <a href="index.html">← Back to Main Page</a>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    async function fetchAndRenderTrends() {
+      try {
+        const res = await fetch('https://whats-my-latency-worker.arungupta.workers.dev/trends');
+        const data = await res.json();
+        // Group by region
+        const regions = [...new Set(data.map(d => d.region))];
+        const datasets = regions.map(region => {
+          const regionData = data.filter(d => d.region === region).reverse();
+          return {
+            label: region,
+            data: regionData.map(d => ({ x: d.timestamp, y: d.latency })),
+            fill: false,
+            borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+            tension: 0.2
+          };
+        });
+        const ctx = document.getElementById('latency-trend-chart').getContext('2d');
+        if (window.latencyTrendChart) window.latencyTrendChart.destroy();
+        window.latencyTrendChart = new Chart(ctx, {
+          type: 'line',
+          data: { datasets },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: true },
+              title: { display: false }
+            },
+            scales: {
+              x: {
+                type: 'time',
+                time: { unit: 'minute', tooltipFormat: 'MMM d, HH:mm:ss' },
+                title: { display: true, text: 'Timestamp' }
+              },
+              y: {
+                title: { display: true, text: 'Latency (ms)' },
+                beginAtZero: true
+              }
+            }
+          }
+        });
+      } catch (e) {
+        const ctx = document.getElementById('latency-trend-chart').getContext('2d');
+        ctx.font = '16px monospace';
+        ctx.fillStyle = '#ff4444';
+        ctx.fillText('Failed to load trends', 10, 50);
+      }
+    }
+    window.addEventListener('DOMContentLoaded', fetchAndRenderTrends);
+  </script>
+</body>
+</html> 
