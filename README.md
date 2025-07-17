@@ -33,6 +33,7 @@ This project is a hands-on demonstration of Cloudflare’s global edge network a
 - **Interoperability:** Combines Cloudflare and AWS endpoints, showing how Cloudflare can be part of a multi-cloud or hybrid architecture.
 - **Modern Web Standards:** Uses Cloudflare’s support for modern JavaScript, APIs, and security best practices.
 - **User Experience:** Demonstrates how Cloudflare’s edge can power interactive, real-time, and globally accessible web apps.
+- **Security & Bot Protection:** Uses Cloudflare Turnstile for privacy-first, user-friendly CAPTCHA to protect endpoints from bots and abuse, showcasing Cloudflare’s security platform.
 
 > **Cloudflare isn’t just a CDN—it’s a platform for building the next generation of fast, secure, and global applications.**
 
