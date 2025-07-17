@@ -1,0 +1,93 @@
+body {
+  background: #181818;
+  color: #00ff00;
+  font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+  margin: 0;
+  min-height: 100vh;
+}
+
+.terminal-container {
+  max-width: 700px;
+  margin: 40px auto;
+  background: #222;
+  border-radius: 8px;
+  box-shadow: 0 0 24px #000a;
+  padding: 2rem 2.5rem 2.5rem 2.5rem;
+  border: 2px solid #00ff00;
+}
+
+h1 {
+  color: #00ff00;
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+p {
+  color: #b5ffb5;
+  margin-bottom: 1.5rem;
+}
+
+button#retest-btn {
+  background: #111;
+  color: #00ff00;
+  border: 1px solid #00ff00;
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.5rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  transition: background 0.2s, color 0.2s;
+}
+button#retest-btn:hover {
+  background: #00ff00;
+  color: #181818;
+}
+
+table#latency-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+  background: #181818;
+}
+table#latency-table th, table#latency-table td {
+  padding: 0.7rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #333;
+}
+table#latency-table th {
+  color: #00ff00;
+  font-size: 1.1rem;
+  border-bottom: 2px solid #00ff00;
+}
+table#latency-table td {
+  color: #b5ffb5;
+  font-size: 1rem;
+}
+
+/* Latency indicators */
+.latency-fast {
+  color: #00ff00;
+  font-weight: bold;
+}
+.latency-medium {
+  color: #ffff00;
+  font-weight: bold;
+}
+.latency-slow {
+  color: #ff4444;
+  font-weight: bold;
+}
+
+#leaderboard-map {
+  margin-top: 2rem;
+  color: #00ff00;
+  min-height: 60px;
+  text-align: center;
+  font-size: 1.1rem;
+  border: 1px dashed #00ff00;
+  border-radius: 6px;
+  padding: 1rem;
+  background: #181818;
+} 

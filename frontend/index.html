@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What's My Latency?</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="terminal-container">
+    <h1>What's My Latency?</h1>
+    <p>Measure your real-time latency to Cloudflare edge locations.</p>
+    <button id="retest-btn">Re-Test</button>
+    <table id="latency-table">
+      <thead>
+        <tr>
+          <th>POP</th>
+          <th>Latency (ms)</th>
+          <th>Country</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Results will be inserted here -->
+      </tbody>
+    </table>
+    <div id="leaderboard-map">
+      <!-- Map or leaderboard placeholder -->
+    </div>
+  </div>
+  <script src="main.js"></script>
+</body>
+</html> 
