@@ -21,9 +21,7 @@ https://whats-my-latency-worker.<your-subdomain>.workers.dev
 ```
 
 **Example (using your subdomain):**
-```
-https://whats-my-latency-worker.arungupta.workers.dev
-```
+[https://whats-my-latency-worker.arungupta.workers.dev](https://whats-my-latency-worker.arungupta.workers.dev)
 
 ### What to Expect
 You will receive a JSON response like this:
