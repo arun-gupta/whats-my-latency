@@ -4,6 +4,10 @@
 
 ---
 
+## 🚀 Live Demo
+
+👉 [Try What's My Latency on Cloudflare Pages!](https://whats-my-latency.pages.dev/)
+
 ## ✨ Features
 
 - **Real-time latency measurement** to Cloudflare and AWS Lambda regions worldwide
@@ -176,6 +180,12 @@ Below is a screenshot of the main page:
 > - Place your screenshot in the `frontend/screenshots/` directory as `main-ui.png`.
 > - Use PNG or JPG format for best results.
 > - To update, replace the placeholder image with your own screenshot.
+
+---
+
+## 📝 TODO
+
+- [ ] Set up a custom branded domain for the Cloudflare Pages site (e.g., whatmylatency.com or latency.yourbrand.com)
 
 ---
 
