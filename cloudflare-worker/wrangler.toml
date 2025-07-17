@@ -1,6 +1,8 @@
 name = "whats-my-latency-worker"
-type = "javascript"
+# type = "javascript"
 account_id = "af86ad0762a15106eea3a63829d709eb"
 workers_dev = true
 main = "index.js"
 compatibility_date = "2024-06-10" 
+[vars]
+TURNSTILE_SECRET_KEY = "0x4AAAAAABlib-P_2YL3yVNUjh8l6yuIBI0" 
