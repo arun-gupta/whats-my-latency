@@ -1,49 +1,35 @@
 # What's My Latency?
 
-**What's My Latency?** is a web app and Cloudflare Worker project that helps users measure their real-time latency to multiple Cloudflare edge locations (POPs).
+**What's My Latency?** is a web app and Cloudflare Worker project that measures your real-time latency to multiple edge locations around the world. Instantly see which region is fastest for you, visualized in a beautiful, interactive UI.
 
-## Purpose
-This repository provides a tool for:
-- Measuring your latency to various Cloudflare edge locations around the world
-- Visualizing which Cloudflare POP is fastest for you in real time
-- Learning about global network performance from your browser
+---
 
-## How It Works
-- A Cloudflare Worker is deployed to the edge and returns its POP location and timestamp in a JSON response.
-- The frontend (coming soon) will make parallel requests to the Worker, measure roundtrip times, and display the results in a terminal-inspired UI.
+## ✨ Features
 
-## Phase 1: Test the Worker Endpoint
+- **Real-time latency measurement** to Cloudflare and AWS Lambda regions worldwide
+- **Interactive map** with animated "WarGames"-style lines from each region to your location
+- **Terminal-inspired UI** with region table, country flags, and full region names
+- **Winner display**: See the fastest region above the map after each test
+- **Theme toggle**: Matrix, Classic, and Light themes with persistent selection
+- **Accessibility**: Keyboard navigation, ARIA labels, focus indicators, and color contrast
+- **Error handling & feedback**: Loading spinner, error messages, and user notifications
+- **"Center on Me"**: Instantly center the map on your location
+- **Responsive design**: Works great on desktop, tablet, and mobile
 
-You can test the backend by visiting this URL pattern in your browser or with `curl`:
+---
 
-```
-https://whats-my-latency-worker.<my-subdomain>.workers.dev
-```
+## 🚀 How It Works
 
-**Example (using my subdomain):**
-[https://whats-my-latency-worker.arungupta.workers.dev](https://whats-my-latency-worker.arungupta.workers.dev)
+- The backend is a Cloudflare Worker (and AWS Lambda endpoints) that returns its POP/location and timestamp in a JSON response.
+- The frontend makes parallel requests to all endpoints, measures roundtrip times, and displays results in a table and on a map.
+- The map animates lines from each region to your location, just like in classic "WarGames" movies.
+- Click or keyboard-activate any region marker to replay the animation for that region.
 
-### What to Expect
-You will receive a JSON response like this:
+---
 
-```json
-{
-  "pop": "SFO",
-  "timestamp": "2024-06-10T18:00:00Z",
-  "cf_ray": "7a1b2c3d4e5f1234-SFO",
-  "country": "US"
-}
-```
-- `pop`: The Cloudflare edge location that handled your request (e.g., SFO, LHR)
-- `timestamp`: The UTC time the request was processed
-- `cf_ray`: The Cloudflare Ray ID (includes POP code)
-- `country`: The detected country code
+## 🖥️ Running the App Locally
 
-## Running the Frontend Locally
-
-To test the frontend UI locally:
-
-1. Make sure you have [Node.js and npx](https://nodejs.org/) installed.
+1. **Install [Node.js and npx](https://nodejs.org/)** if you haven't already.
 2. From the project root, run:
    ```sh
    npx serve frontend
@@ -56,31 +42,83 @@ To test the frontend UI locally:
   npx serve frontend -l 8080
   ```
   Then open [http://localhost:8080](http://localhost:8080).
-- If you see a 404 for `/favicon.ico`, that's normal unless you add a favicon.
 - Leave the terminal window open while testing; closing it will stop the server.
 
-**What to Expect:**
-- The page will load with a terminal-inspired UI.
-- It will immediately test latency to your Worker endpoint and display the result in the table.
-- You can click “Re-Test” to run the test again.
+---
 
-## Project Phases
-### Phase 1 (Complete)
-- Cloudflare Worker backend that returns POP, timestamp, and related info
-- Setup and deployment instructions
-- Ready for frontend integration
+## 🕹️ Using the App
 
-### Phase 2 (In Progress)
-- Frontend UI to display latency results in a table, leaderboard, and map
-- Anonymous aggregate stats using Cloudflare KV or D1
-- Region ranking and "Re-Test" button
-- Local region estimation via browser timezone or IP
+- The app will immediately test latency to all regions and display results in the table and on the map.
+- **Re-Test**: Click the "Re-Test" button to run the tests again.
+- **Theme Toggle**: Switch between Matrix, Classic, and Light themes (your choice is remembered).
+- **Map**: See all regions, your location, and animated lines. Click or keyboard-activate any marker to replay the animation for that region.
+- **Center on Me**: Click to center the map on your location.
+- **Winner**: The fastest region is shown above the map after each test.
+- **Accessibility**: All features are keyboard accessible and screen reader friendly.
+- **Error Handling**: If a region can't be reached, you'll see a clear error message and icon in the table.
 
-## Directory Structure
+---
+
+## 📦 Directory Structure
+
 - `cloudflare-worker/` — Cloudflare Worker backend and deployment config
 - `frontend/` — Frontend UI (HTML, CSS, JS)
 - (root) — Documentation
 
 ---
 
-**Stay tuned for more features!** 
+## 🛠️ Backend API Example
+
+A typical response from the Worker or Lambda endpoint:
+```json
+{
+  "pop": "SFO",
+  "timestamp": "2024-06-10T18:00:00Z",
+  "cf_ray": "7a1b2c3d4e5f1234-SFO",
+  "country": "US"
+}
+```
+- `pop`: The edge location that handled your request (e.g., SFO, LHR)
+- `timestamp`: The UTC time the request was processed
+- `cf_ray`: The Cloudflare Ray ID (includes POP code)
+- `country`: The detected country code
+
+---
+
+## 🧑‍💻 Accessibility & Responsiveness
+
+- All interactive elements are keyboard accessible and have ARIA labels.
+- Visible focus indicators for keyboard navigation.
+- Sufficient color contrast for all themes.
+- Fully responsive layout for mobile, tablet, and desktop.
+
+---
+
+## 📝 Project Phases
+
+### Phase 1 (Complete)
+- Cloudflare Worker backend that returns POP, timestamp, and related info
+- Setup and deployment instructions
+
+### Phase 2 (Complete)
+- Frontend UI with table, map, leaderboard, and full accessibility
+- Multi-region latency testing (Cloudflare + AWS Lambda)
+- Animated map visualization and interactive features
+- Error handling, user feedback, and theme support
+
+---
+
+## �� Screenshots
+
+Below is a screenshot of the main page:
+
+![Main UI Screenshot](frontend/screenshots/main-ui.png)
+
+> **Tip:**
+> - Place your screenshot in the `frontend/screenshots/` directory as `main-ui.png`.
+> - Use PNG or JPG format for best results.
+> - To update, replace the placeholder image with your own screenshot.
+
+---
+
+**Enjoy measuring your latency around the world!** 
