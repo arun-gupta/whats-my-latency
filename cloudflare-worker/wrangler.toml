@@ -1,0 +1,6 @@
+name = "whats-my-latency-worker"
+type = "javascript"
+account_id = "af86ad0762a15106eea3a63829d709eb"
+workers_dev = true
+main = "index.js"
+compatibility_date = "2024-06-10" 
