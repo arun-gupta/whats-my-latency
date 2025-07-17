@@ -439,6 +439,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// Helper to get Turnstile token
+function getTurnstileToken() {
+  const input = document.querySelector('.cf-turnstile [name="cf-turnstile-response"]');
+  return input ? input.value : '';
+}
+
+// Example: When submitting stats (add turnstileToken to POST body)
+async function submitStats(country, fastestPop) {
+  const turnstileToken = getTurnstileToken();
+  const res = await fetch('https://YOUR_WORKER_DOMAIN/stats', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ country, fastestPop, turnstileToken })
+  });
+  // Handle response...
+}
+
 // Run on load
 window.addEventListener('DOMContentLoaded', () => {
   runTests();

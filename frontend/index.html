@@ -9,6 +9,9 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
+  <div style="background: #222; color: #00ff00; padding: 1em; text-align: center; font-size: 1.1em; border-bottom: 2px solid #00ff00;">
+    🚀 <b>Live Demo:</b> <a href="https://whats-my-latency.pages.dev/" target="_blank" style="color: #39ff14; text-decoration: underline;">https://whats-my-latency.pages.dev/</a>
+  </div>
   <main class="terminal-container" role="main">
     <header>
       <button id="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle color theme" tabindex="0">🌈 Theme</button>
@@ -17,6 +20,10 @@
     </header>
     <div id="feedback-message" aria-live="polite" role="alert" style="margin-bottom:1rem;"></div>
     <div id="loading-spinner" aria-label="Loading" style="display:none; text-align:center; margin-bottom:1rem;"></div>
+    <div id="turnstile-container" style="margin-bottom: 1rem; text-align: center;">
+      <!-- Cloudflare Turnstile widget will be rendered here -->
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAABlib5O3WAAktnD7"></div>
+    </div>
     <button id="retest-btn" aria-label="Re-Test Latency" tabindex="0">Re-Test</button>
     <section aria-label="Latency Results">
       <table id="latency-table" aria-label="Latency results table">
@@ -42,5 +49,6 @@
   </main>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="main.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </body>
 </html> 
