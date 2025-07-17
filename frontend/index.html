@@ -9,29 +9,35 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
-  <div class="terminal-container">
-    <button id="theme-toggle-btn" title="Toggle Theme">🌈 Theme</button>
-    <h1>What's My Latency?</h1>
-    <p>Measure your real-time latency to Cloudflare edge locations.</p>
-    <button id="retest-btn">Re-Test</button>
-    <table id="latency-table">
-      <thead>
-        <tr>
-          <th>POP</th>
-          <th>Latency (ms)</th>
-          <th>Country</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Results will be inserted here -->
-      </tbody>
-    </table>
-    <div id="leaderboard-map">
+  <main class="terminal-container" role="main">
+    <header>
+      <button id="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle color theme" tabindex="0">🌈 Theme</button>
+      <h1>What's My Latency?</h1>
+      <p>Measure your real-time latency to Cloudflare edge locations.</p>
+    </header>
+    <button id="retest-btn" aria-label="Re-Test Latency" tabindex="0">Re-Test</button>
+    <section aria-label="Latency Results">
+      <table id="latency-table" aria-label="Latency results table">
+        <thead>
+          <tr>
+            <th scope="col">POP</th>
+            <th scope="col">Latency (ms)</th>
+            <th scope="col">Country</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Results will be inserted here -->
+        </tbody>
+      </table>
+    </section>
+    <section id="leaderboard-map" aria-label="Leaderboard or Map">
       <!-- Map or leaderboard placeholder -->
-    </div>
-    <div id="latency-map" style="height: 400px; margin-top: 2rem; border-radius: 8px; overflow: hidden;"></div>
-    <button id="center-me-btn" style="margin-top: 1rem;">Center on Me</button>
-  </div>
+    </section>
+    <section aria-label="Latency Map">
+      <div id="latency-map" style="height: 400px; margin-top: 2rem; border-radius: 8px; overflow: hidden;" role="region" aria-label="Latency map"></div>
+      <button id="center-me-btn" style="margin-top: 1rem;" aria-label="Center map on your location" tabindex="0">Center on Me</button>
+    </section>
+  </main>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="main.js"></script>
 </body>

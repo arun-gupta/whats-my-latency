@@ -50,7 +50,9 @@ function countryFlagEmoji(countryCode) {
   if (!countryCode || countryCode.length !== 2) return '';
   // Regional indicator symbols: A = 0x1F1E6
   const codePoints = [...countryCode.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65);
-  return String.fromCodePoint(...codePoints);
+  // Add aria-label for flag emoji
+  const countryName = countryNames[countryCode.toUpperCase()] || countryCode;
+  return `<span role="img" aria-label="${countryName} flag">${String.fromCodePoint(...codePoints)}</span>`;
 }
 
 const tableBody = document.querySelector('#latency-table tbody');
@@ -223,7 +225,7 @@ async function updateMap(results) {
   let browserMarker = null;
   const bounds = [];
   if (browserLoc) {
-    browserMarker = L.marker(browserLoc, { title: 'Your Location' }).addTo(map);
+    browserMarker = L.marker(browserLoc, { title: 'Your Location', keyboard: true, alt: 'Your Location' }).addTo(map);
     browserMarker.bindPopup('Your Location').openPopup();
     markers.push(browserMarker);
     bounds.push(browserLoc);
@@ -231,7 +233,7 @@ async function updateMap(results) {
 
   // Prepare region markers
   const regionMarkers = [];
-  results.forEach(result => {
+  results.forEach((result, idx) => {
     let coord = null;
     let markerLabel = result.label;
     let region = getRegionFromLabel(result.label);
@@ -245,26 +247,43 @@ async function updateMap(results) {
     if (coord && region) {
       const latency = result.latency !== null ? result.latency.toFixed(1) + ' ms' : 'Error';
       const popup = `<b>${markerLabel}</b><br>Latency: ${latency}`;
-      const marker = L.marker(coord, { title: markerLabel }).addTo(map);
+      const marker = L.marker(coord, { title: markerLabel, keyboard: true, alt: markerLabel, riseOnFocus: true }).addTo(map);
       marker.bindPopup(popup);
+      marker._icon.setAttribute('tabindex', '0');
+      marker._icon.setAttribute('role', 'button');
+      marker._icon.setAttribute('aria-label', markerLabel + ', ' + latency);
+      marker._icon.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          marker.openPopup();
+          setTimeout(() => {
+            const popupEl = document.querySelector('.leaflet-popup-content');
+            if (popupEl) popupEl.focus();
+          }, 100);
+        }
+      });
+      // Allow popup to be closed with Escape
+      marker.on('popupopen', () => {
+        setTimeout(() => {
+          const popupEl = document.querySelector('.leaflet-popup-content');
+          if (popupEl) {
+            popupEl.setAttribute('tabindex', '0');
+            popupEl.focus();
+            popupEl.addEventListener('keydown', (e) => {
+              if (e.key === 'Escape') {
+                map.closePopup();
+              }
+            });
+          }
+        }, 100);
+      });
       markers.push(marker);
-      regionMarkers.push({ coord, marker, label: markerLabel });
-      // Attach click event to animate only this line
-      marker.on('click', () => replayWarGamesAnimationForMarker(coord, marker));
-      // Store marker reference for replay
       result._marker = marker;
+      regionMarkers.push({ coord, marker, label: markerLabel });
       bounds.push(coord);
     }
   });
-  // Fit map to show all markers
-  if (bounds.length > 1) {
+  if (bounds.length > 0) {
     map.fitBounds(bounds, { padding: [40, 40] });
-  }
-  // Save results for replay
-  lastResults = results;
-  // Animate lines WarGames style (all) on initial load
-  if (browserLoc && regionMarkers.length > 0) {
-    await animateWarGamesLines(regionMarkers, browserLoc);
   }
 }
 
@@ -347,6 +366,20 @@ function loadTheme() {
 
 document.getElementById('theme-toggle-btn').addEventListener('click', cycleTheme);
 loadTheme();
+
+// Add ARIA live region for latency table updates
+document.addEventListener('DOMContentLoaded', () => {
+  let liveRegion = document.getElementById('aria-live-region');
+  if (!liveRegion) {
+    liveRegion = document.createElement('div');
+    liveRegion.id = 'aria-live-region';
+    liveRegion.setAttribute('aria-live', 'polite');
+    liveRegion.setAttribute('role', 'status');
+    liveRegion.style.position = 'absolute';
+    liveRegion.style.left = '-9999px';
+    document.body.appendChild(liveRegion);
+  }
+});
 
 // Run on load
 runTests(); 
