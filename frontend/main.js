@@ -221,10 +221,12 @@ async function updateMap(results) {
   // Get browser location
   const browserLoc = await getBrowserLocation();
   let browserMarker = null;
+  const bounds = [];
   if (browserLoc) {
     browserMarker = L.marker(browserLoc, { title: 'Your Location' }).addTo(map);
     browserMarker.bindPopup('Your Location').openPopup();
     markers.push(browserMarker);
+    bounds.push(browserLoc);
   }
 
   // Prepare region markers
@@ -251,8 +253,13 @@ async function updateMap(results) {
       marker.on('click', () => replayWarGamesAnimationForMarker(coord, marker));
       // Store marker reference for replay
       result._marker = marker;
+      bounds.push(coord);
     }
   });
+  // Fit map to show all markers
+  if (bounds.length > 1) {
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }
   // Save results for replay
   lastResults = results;
   // Animate lines WarGames style (all) on initial load
@@ -311,6 +318,11 @@ async function runTests() {
 }
 
 retestBtn.addEventListener('click', runTests);
+
+document.getElementById('center-me-btn').addEventListener('click', async () => {
+  const browserLoc = await getBrowserLocation();
+  if (browserLoc) map.setView(browserLoc, 3);
+});
 
 const THEMES = ['matrix', 'classic', 'light'];
 let currentThemeIdx = 0;
