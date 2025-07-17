@@ -320,6 +320,12 @@ async function updateMap(results) {
 function updateTable(results) {
   tableBody.innerHTML = '';
   let summary = '';
+  // Find the fastest (lowest non-null, non-error latency)
+  const validResults = results.filter(r => r.latency !== null && !r.error);
+  let fastest = null;
+  if (validResults.length) {
+    fastest = validResults.reduce((min, r) => (min === null || r.latency < min.latency ? r : min), null);
+  }
   results.forEach(result => {
     const flag = countryFlagEmoji(result.country);
     const latency = result.latency !== null ? result.latency.toFixed(1) : 'Error';
@@ -335,6 +341,13 @@ function updateTable(results) {
     tableBody.appendChild(row);
     summary += `${result.pop || result.label}: ${latency} ms. `;
   });
+  // Update leaderboard/winner display
+  if (fastest) {
+    const flag = countryFlagEmoji(fastest.country);
+    leaderboardMap.innerHTML = `🏆 Fastest: <b>${fastest.pop || fastest.label}</b> (${flag} ${countryNames[fastest.country] || fastest.country}) <span class="latency-fast">${fastest.latency.toFixed(1)} ms</span>`;
+  } else {
+    leaderboardMap.innerHTML = 'No successful results.';
+  }
   // Announce table update
   const liveRegion = document.getElementById('aria-live-region');
   if (liveRegion) {
