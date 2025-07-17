@@ -18,6 +18,21 @@
 
 ---
 
+## 🌍 Why Cloudflare?
+
+This project is a hands-on demonstration of Cloudflare’s global edge network and developer platform:
+
+- **Global Reach:** Instantly test latency to Cloudflare POPs and AWS regions around the world, showing the power of a distributed edge.
+- **Real-Time Performance:** Experience how Cloudflare Workers deliver lightning-fast responses from the nearest location.
+- **Developer Platform:** Built using Cloudflare Workers, this app highlights how easy it is to deploy, scale, and run code at the edge with minimal setup.
+- **Interoperability:** Combines Cloudflare and AWS endpoints, showing how Cloudflare can be part of a multi-cloud or hybrid architecture.
+- **Modern Web Standards:** Uses Cloudflare’s support for modern JavaScript, APIs, and security best practices.
+- **User Experience:** Demonstrates how Cloudflare’s edge can power interactive, real-time, and globally accessible web apps.
+
+> **Cloudflare isn’t just a CDN—it’s a platform for building the next generation of fast, secure, and global applications.**
+
+---
+
 ## 🚀 How It Works
 
 - The backend is a Cloudflare Worker (and AWS Lambda endpoints) that returns its POP/location and timestamp in a JSON response.
@@ -85,6 +100,49 @@ A typical response from the Worker or Lambda endpoint:
 
 ---
 
+## 📚 API Reference: Cloudflare Worker Endpoint
+
+### `GET /`
+
+Returns the POP (Point of Presence) and related info for the Cloudflare Worker handling your request.
+
+**Endpoint:**
+```
+https://whats-my-latency-worker.<your-subdomain>.workers.dev/
+```
+
+**Method:**
+- `GET`
+
+**Query Parameters:**
+- None
+
+**Response:**
+- `200 OK` — JSON object
+
+```json
+{
+  "pop": "SFO",
+  "timestamp": "2024-06-10T18:00:00Z",
+  "cf_ray": "7a1b2c3d4e5f1234-SFO",
+  "country": "US"
+}
+```
+
+| Field      | Type   | Description                                      |
+|------------|--------|--------------------------------------------------|
+| pop        | string | Cloudflare POP code (e.g., SFO, LHR)             |
+| timestamp  | string | UTC ISO timestamp of the request                 |
+| cf_ray     | string | Cloudflare Ray ID (includes POP code)            |
+| country    | string | ISO country code of the detected location        |
+
+**Example:**
+```
+curl https://whats-my-latency-worker.<your-subdomain>.workers.dev/
+```
+
+---
+
 ## 🧑‍💻 Accessibility & Responsiveness
 
 - All interactive elements are keyboard accessible and have ARIA labels.
@@ -108,7 +166,7 @@ A typical response from the Worker or Lambda endpoint:
 
 ---
 
-## �� Screenshots
+## 📷 Screenshots
 
 Below is a screenshot of the main page:
 
