@@ -14,8 +14,13 @@ This repository provides a tool for:
 
 ## Phase 1: Test the Worker Endpoint
 
-You can test the backend by visiting this URL in your browser or with `curl`:
+You can test the backend by visiting this URL pattern in your browser or with `curl`:
 
+```
+https://whats-my-latency-worker.<your-subdomain>.workers.dev
+```
+
+**Example (using your subdomain):**
 ```
 https://whats-my-latency-worker.arungupta.workers.dev
 ```
