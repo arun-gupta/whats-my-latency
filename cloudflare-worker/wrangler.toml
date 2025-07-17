@@ -6,3 +6,14 @@ main = "index.js"
 compatibility_date = "2024-06-10" 
 [vars]
 TURNSTILE_SECRET_KEY = "0x4AAAAAABlib-P_2YL3yVNUjh8l6yuIBI0" 
+[[d1_databases]]
+binding = "LATENCY_DB"
+database_name = "whats-my-latency"
+database_id = "212d9873-b7a8-432a-b526-09c9f8a4bca8" 
+[triggers]
+crons = ["*/3 * * * *"] 
+[observability.logs]
+enabled = true
+
+
+

@@ -33,6 +33,15 @@ export default {
         headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' },
       });
     }
+    if (request.method === 'OPTIONS' && url.pathname === '/trigger-latency-test') {
+      return new Response(null, {
+        headers: {
+          'access-control-allow-origin': '*',
+          'access-control-allow-methods': 'POST, OPTIONS',
+          'access-control-allow-headers': 'Content-Type',
+        }
+      });
+    }
     if (request.method === 'POST' && url.pathname === '/trigger-latency-test') {
       // Run latency tests to all endpoints (reuse scheduled handler logic)
       const ENDPOINTS = [
@@ -47,24 +56,35 @@ export default {
       ];
       async function testLatency(endpoint) {
         const start = Date.now();
-        let latency = null;
+        let latency = null, error = null;
         try {
-          await fetch(endpoint.url, { cache: 'no-store' });
+          await fetch(endpoint.url);
           latency = Date.now() - start;
         } catch (e) {
           latency = null;
+          error = e.message;
         }
-        return { region: endpoint.region, latency, timestamp: new Date().toISOString() };
+        return { region: endpoint.region, latency, timestamp: new Date().toISOString(), error };
       }
+      const inserted = [];
       for (const endpoint of ENDPOINTS) {
         const result = await testLatency(endpoint);
         if (result.latency != null) {
-          await env.LATENCY_DB.prepare(
-            'INSERT INTO latency_results (timestamp, region, latency) VALUES (?, ?, ?)'
-          ).bind(result.timestamp, result.region, result.latency).run();
+          try {
+            const dbResult = await env.LATENCY_DB.prepare(
+              'INSERT INTO latency_results (timestamp, region, latency) VALUES (?, ?, ?)' 
+            ).bind(result.timestamp, result.region, result.latency).run();
+            result.dbOutput = dbResult;
+          } catch (e) {
+            result.dbError = e.message;
+          }
         }
+        inserted.push(result);
       }
-      return new Response('Triggered latency test and inserted results.', { status: 200 });
+      return new Response(JSON.stringify(inserted, null, 2), {
+        status: 200,
+        headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' }
+      });
     }
     const now = new Date().toISOString();
     const cf = request.cf || {};
@@ -107,7 +127,7 @@ export default {
       const start = Date.now();
       let latency = null;
       try {
-        await fetch(endpoint.url, { cache: 'no-store' });
+        await fetch(endpoint.url);
         latency = Date.now() - start;
       } catch (e) {
         latency = null;
