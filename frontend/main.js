@@ -65,10 +65,34 @@ function getLatencyClass(ms) {
   return 'latency-slow';
 }
 
+function showLoadingSpinner(show, message = 'Testing latency...') {
+  const spinner = document.getElementById('loading-spinner');
+  if (show) {
+    spinner.innerHTML = `<span class="spinner"></span> <span>${message}</span>`;
+    spinner.style.display = 'flex';
+  } else {
+    spinner.innerHTML = '';
+    spinner.style.display = 'none';
+  }
+}
+
+function setFeedbackMessage(msg, type = '') {
+  const el = document.getElementById('feedback-message');
+  el.textContent = msg;
+  el.className = type ? ` ${type}` : '';
+}
+
+function setButtonsDisabled(disabled) {
+  document.getElementById('retest-btn').disabled = disabled;
+  document.getElementById('center-me-btn').disabled = disabled;
+  document.getElementById('theme-toggle-btn').disabled = disabled;
+}
+
 async function testLatency(endpoint, testNum) {
   const start = performance.now();
   let data = null;
   let latency = null;
+  let error = null;
   try {
     const response = await fetch(endpoint.url, { cache: 'no-store' });
     latency = performance.now() - start;
@@ -76,12 +100,14 @@ async function testLatency(endpoint, testNum) {
   } catch (e) {
     latency = null;
     data = { pop: 'N/A', country: 'N/A', region: endpoint.label };
+    error = e.message || 'Network error';
   }
   return {
     ...endpoint,
     latency,
     ...data,
     testNum,
+    error,
   };
 }
 
@@ -287,60 +313,74 @@ async function updateMap(results) {
   }
 }
 
-async function runTests() {
+function updateTable(results) {
   tableBody.innerHTML = '';
-  leaderboardMap.textContent = 'Testing...';
-  const testPromises = [];
-  endpoints.forEach((endpoint, i) => {
-    for (let t = 0; t < NUM_TESTS; t++) {
-      testPromises.push(testLatency(endpoint, t + 1));
-    }
-  });
-  const results = await Promise.all(testPromises);
-  // Find the fastest (lowest non-null latency)
-  const fastest = results.reduce((min, r) => (r.latency !== null && (min === null || r.latency < min.latency) ? r : min), null);
+  let summary = '';
   results.forEach(result => {
-    const tr = document.createElement('tr');
-    // POP or Region
-    const popTd = document.createElement('td');
-    popTd.textContent = result.pop && result.pop !== '' && result.pop !== 'N/A' ? result.pop : (result.region || result.label);
-    tr.appendChild(popTd);
-    // Latency
-    const latencyTd = document.createElement('td');
-    if (result.latency !== null) {
-      latencyTd.textContent = result.latency.toFixed(1);
-      latencyTd.className = getLatencyClass(result.latency);
-      if (fastest && result === fastest) {
-        latencyTd.innerHTML += ' ⭐';
-      }
-    } else {
-      latencyTd.textContent = 'Error';
-      latencyTd.className = 'latency-slow';
-    }
-    tr.appendChild(latencyTd);
-    // Country (flag + full name)
-    const countryTd = document.createElement('td');
-    const code = result.country || '';
-    const flag = countryFlagEmoji(code);
-    const name = countryNames[code] || code;
-    countryTd.textContent = `${flag ? flag + ' ' : ''}${name}`;
-    tr.appendChild(countryTd);
-    tableBody.appendChild(tr);
+    const flag = countryFlagEmoji(result.country);
+    const latency = result.latency !== null ? result.latency.toFixed(1) : 'Error';
+    const latencyClass = result.error ? 'latency-slow' : getLatencyClass(result.latency || 9999);
+    const errorIcon = result.error ? '⚠️' : '';
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${result.pop || result.label}</td>
+      <td class="${latencyClass}">${latency} ${errorIcon}</td>
+      <td>${flag} ${countryNames[result.country] || result.country}</td>
+    `;
+    if (result.error) row.title = `Error: ${result.error}`;
+    tableBody.appendChild(row);
+    summary += `${result.pop || result.label}: ${latency} ms. `;
   });
-  if (fastest && fastest.latency !== null) {
-    leaderboardMap.innerHTML = `Fastest: <b>${fastest.pop || fastest.region || fastest.label}</b> (${fastest.latency.toFixed(1)} ms)`;
-  } else {
-    leaderboardMap.textContent = 'No successful results.';
+  // Announce table update
+  const liveRegion = document.getElementById('aria-live-region');
+  if (liveRegion) {
+    liveRegion.textContent = 'Latency results updated. ' + summary;
   }
-  // Update map
-  updateMap(results);
+}
+
+async function runTests() {
+  setFeedbackMessage('');
+  showLoadingSpinner(true);
+  setButtonsDisabled(true);
+  try {
+    const promises = endpoints.map((ep, i) => testLatency(ep, i));
+    const results = await Promise.all(promises);
+    updateTable(results);
+    lastResults = results;
+    await updateMap(results);
+    if (results.some(r => r.error)) {
+      setFeedbackMessage('Some regions could not be reached. See ⚠️ in table.', 'error');
+    } else {
+      setFeedbackMessage('All latency tests completed successfully.', 'success');
+    }
+  } catch (e) {
+    setFeedbackMessage('Unexpected error: ' + e.message, 'error');
+  } finally {
+    showLoadingSpinner(false);
+    setButtonsDisabled(false);
+  }
 }
 
 retestBtn.addEventListener('click', runTests);
 
 document.getElementById('center-me-btn').addEventListener('click', async () => {
-  const browserLoc = await getBrowserLocation();
-  if (browserLoc) map.setView(browserLoc, 3);
+  setFeedbackMessage('');
+  showLoadingSpinner(true, 'Centering map...');
+  setButtonsDisabled(true);
+  try {
+    const browserLoc = await getBrowserLocation();
+    if (browserLoc && map) {
+      map.setView(browserLoc, 5);
+      setFeedbackMessage('Map centered on your location.', 'success');
+    } else {
+      setFeedbackMessage('Could not determine your location.', 'error');
+    }
+  } catch (e) {
+    setFeedbackMessage('Error centering map: ' + e.message, 'error');
+  } finally {
+    showLoadingSpinner(false);
+    setButtonsDisabled(false);
+  }
 });
 
 const THEMES = ['matrix', 'classic', 'light'];
@@ -382,4 +422,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Run on load
-runTests(); 
+window.addEventListener('DOMContentLoaded', () => {
+  runTests();
+}); 
