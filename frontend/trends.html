@@ -17,7 +17,8 @@
     <h1>Latency Trends (Last 100 Results)</h1>
     <canvas id="latency-trend-chart" width="700" height="350" style="background:#111; border-radius:8px;"></canvas>
     <div style="text-align:center; margin-top:2em;">
-      <a href="index.html">← Back to Main Page</a>
+      <button id="trigger-latency-btn">Run Latency Test Now</button>
+      <a href="index.html" style="margin-left:2em;">← Back to Main Page</a>
     </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -70,6 +71,18 @@
       }
     }
     window.addEventListener('DOMContentLoaded', fetchAndRenderTrends);
+    document.getElementById('trigger-latency-btn').onclick = async function() {
+      this.disabled = true;
+      this.textContent = 'Running...';
+      console.log('Triggering backend latency test...');
+      const resp = await fetch('https://whats-my-latency-worker.arungupta.workers.dev/trigger-latency-test', { method: 'POST' });
+      console.log('Response status:', resp.status);
+      const body = await resp.text();
+      console.log('Response body:', body);
+      this.textContent = 'Run Latency Test Now';
+      this.disabled = false;
+      fetchAndRenderTrends();
+    };
   </script>
 </body>
 </html> 
