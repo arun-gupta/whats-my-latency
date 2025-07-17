@@ -278,8 +278,12 @@ async function updateMap(results) {
       marker._icon.setAttribute('tabindex', '0');
       marker._icon.setAttribute('role', 'button');
       marker._icon.setAttribute('aria-label', markerLabel + ', ' + latency);
+      // Animate on click
+      marker.on('click', () => replayWarGamesAnimationForMarker(coord, marker));
+      // Animate on keyboard activation
       marker._icon.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
+          replayWarGamesAnimationForMarker(coord, marker);
           marker.openPopup();
           setTimeout(() => {
             const popupEl = document.querySelector('.leaflet-popup-content');
