@@ -42,6 +42,7 @@ const countryNames = {
   DE: 'Germany',
   BR: 'Brazil',
   CA: 'Canada',
+  SG: 'Singapore',
   // Add more as needed
 };
 
