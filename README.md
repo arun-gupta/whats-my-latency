@@ -39,13 +39,38 @@ You will receive a JSON response like this:
 - `cf_ray`: The Cloudflare Ray ID (includes POP code)
 - `country`: The detected country code
 
+## Running the Frontend Locally
+
+To test the frontend UI locally:
+
+1. Make sure you have [Node.js and npx](https://nodejs.org/) installed.
+2. From the project root, run:
+   ```sh
+   npx serve frontend
+   ```
+3. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+**Troubleshooting:**
+- If port 3000 is in use, try a different port:
+  ```sh
+  npx serve frontend -l 8080
+  ```
+  Then open [http://localhost:8080](http://localhost:8080).
+- If you see a 404 for `/favicon.ico`, that's normal unless you add a favicon.
+- Leave the terminal window open while testing; closing it will stop the server.
+
+**What to Expect:**
+- The page will load with a terminal-inspired UI.
+- It will immediately test latency to your Worker endpoint and display the result in the table.
+- You can click “Re-Test” to run the test again.
+
 ## Project Phases
 ### Phase 1 (Complete)
 - Cloudflare Worker backend that returns POP, timestamp, and related info
 - Setup and deployment instructions
 - Ready for frontend integration
 
-### Phase 2 (Planned)
+### Phase 2 (In Progress)
 - Frontend UI to display latency results in a table, leaderboard, and map
 - Anonymous aggregate stats using Cloudflare KV or D1
 - Region ranking and "Re-Test" button
@@ -53,8 +78,9 @@ You will receive a JSON response like this:
 
 ## Directory Structure
 - `cloudflare-worker/` — Cloudflare Worker backend and deployment config
-- (root) — Frontend and documentation (to be added)
+- `frontend/` — Frontend UI (HTML, CSS, JS)
+- (root) — Documentation
 
 ---
 
-**Stay tuned for the frontend and more features!** 
+**Stay tuned for more features!** 
