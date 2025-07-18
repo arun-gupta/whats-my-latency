@@ -94,7 +94,7 @@ async function testLatency(endpoint, testNum) {
   let latency = null;
   let error = null;
   try {
-    const response = await fetch(endpoint.url, { cache: 'no-store' });
+    const response = await fetch(endpoint.url);
     latency = performance.now() - start;
     data = await response.json();
   } catch (e) {
@@ -456,7 +456,58 @@ async function submitStats(country, fastestPop) {
   // Handle response...
 }
 
+async function fetchAndRenderTrends() {
+  try {
+    const res = await fetch('https://whats-my-latency-worker.arungupta.workers.dev/trends');
+    const data = await res.json();
+    // Group by region
+    const regions = [...new Set(data.map(d => d.region))];
+    const datasets = regions.map(region => {
+      const regionData = data.filter(d => d.region === region).reverse();
+      return {
+        label: region,
+        data: regionData.map(d => ({ x: d.timestamp, y: d.latency })),
+        fill: false,
+        borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+        tension: 0.2
+      };
+    });
+    const ctx = document.getElementById('latency-trend-chart').getContext('2d');
+    if (window.latencyTrendChart) window.latencyTrendChart.destroy();
+    window.latencyTrendChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true },
+          title: { display: false }
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: { unit: 'minute', tooltipFormat: 'MMM d, HH:mm:ss' },
+            title: { display: true, text: 'Timestamp' }
+          },
+          y: {
+            title: { display: true, text: 'Latency (ms)' },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  } catch (e) {
+    const ctx = document.getElementById('latency-trend-chart').getContext('2d');
+    ctx.font = '16px monospace';
+    ctx.fillStyle = '#ff4444';
+    ctx.fillText('Failed to load trends', 10, 50);
+  }
+}
+
 // Run on load
 window.addEventListener('DOMContentLoaded', () => {
   runTests();
+  fetchAndRenderTrends();
 }); 

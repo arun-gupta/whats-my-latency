@@ -10,6 +10,25 @@
     .trends-container { max-width: 800px; margin: 40px auto; background: #222; border-radius: 8px; box-shadow: 0 0 24px #000a; padding: 2rem; border: 2px solid #00ff00; }
     h1 { color: #39ff14; text-align: center; }
     a { color: #39ff14; }
+    .chart-btn {
+      background: #111;
+      color: #39ff14;
+      border: 1px solid #39ff14;
+      padding: 8px 16px;
+      margin: 0 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9em;
+    }
+    .chart-btn.active {
+      background: #39ff14;
+      color: #111;
+    }
+    .chart-btn:hover {
+      background: #39ff14;
+      color: #111;
+    }
     .spinner {
       display: inline-block;
       width: 24px;
@@ -32,6 +51,11 @@
     <h1>Latency Trends of POPs</h1>
     <div id="loading-spinner" aria-label="Loading" style="display:none; text-align:center; margin-bottom:1rem;"></div>
     <div id="row-count" style="color:#39ff14; text-align:center; margin-bottom:1em; font-size:1.1em;">POP(s): ... | Available runs: ...</div>
+    <div style="text-align:center; margin-bottom:1rem;">
+      <button id="line-chart-btn" class="chart-btn active" onclick="switchChartType('line')">Line Chart</button>
+      <button id="heatmap-btn" class="chart-btn" onclick="switchChartType('heatmap')">Heatmap</button>
+      <button id="boxplot-btn" class="chart-btn" onclick="switchChartType('boxplot')">Box Plot</button>
+    </div>
     <div id="legend-container" style="text-align:center; margin-bottom:1rem; padding:0.5rem; background:#111; border-radius:4px;"></div>
     <div id="chart-container" style="overflow-x: auto; margin-bottom: 1rem;">
       <canvas id="latency-trend-chart" width="1400" height="350" style="background:#111; border-radius:8px;"></canvas>
@@ -50,7 +74,320 @@
   </div>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-box-and-violin-plot"></script>
   <script>
+    let currentChartType = 'line';
+    let currentData = null;
+
+    function switchChartType(type) {
+      console.log('Switching to chart type:', type);
+      currentChartType = type;
+      // Update button states
+      document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+      
+      // Map chart types to correct button IDs
+      const buttonIdMap = {
+        'line': 'line-chart-btn',
+        'heatmap': 'heatmap-btn',
+        'boxplot': 'boxplot-btn'
+      };
+      
+      const buttonId = buttonIdMap[type];
+      if (buttonId) {
+        const button = document.getElementById(buttonId);
+        if (button) {
+          button.classList.add('active');
+        }
+      }
+      
+      if (currentData) {
+        try {
+          renderChart(currentData, type);
+        } catch (error) {
+          console.error('Error rendering chart:', error);
+          // Fallback to line chart
+          renderLineChart(currentData, document.getElementById('latency-trend-chart').getContext('2d'), document.getElementById('latency-trend-chart'));
+        }
+      }
+    }
+
+    function renderChart(data, chartType) {
+      console.log('Rendering chart type:', chartType);
+      const canvas = document.getElementById('latency-trend-chart');
+      const ctx = canvas.getContext('2d');
+      
+      if (window.latencyTrendChart) window.latencyTrendChart.destroy();
+      
+      if (chartType === 'line') {
+        renderLineChart(data, ctx, canvas);
+      } else if (chartType === 'heatmap') {
+        renderHeatmap(data, ctx, canvas);
+      } else if (chartType === 'boxplot') {
+        renderBoxPlot(data, ctx, canvas);
+      }
+    }
+
+    function renderLineChart(data, ctx, canvas) {
+      // Group by region
+      const regions = [...new Set(data.map(d => d.region))];
+      const datasets = regions.map(region => {
+        const regionData = data.filter(d => d.region === region);
+        return {
+          label: region,
+          data: regionData.map(d => ({ x: d.timestamp, y: d.latency })),
+          fill: false,
+          borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+          tension: 0.2
+        };
+      });
+      
+      // Make chart scrollable by setting dynamic width based on data points
+      const minWidthPerPoint = 12;
+      const dynamicWidth = Math.max(700, data.length * minWidthPerPoint);
+      canvas.width = dynamicWidth;
+      canvas.style.width = dynamicWidth + 'px';
+      
+      window.latencyTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: { datasets },
+        options: {
+          responsive: false,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: { display: false }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              time: { 
+                unit: 'minute',
+                tooltipFormat: 'MMM d, HH:mm:ss'
+              },
+              title: { display: true, text: 'Timestamp' },
+              display: true
+            },
+            y: {
+              title: { display: true, text: 'Latency (ms)' },
+              beginAtZero: true
+            }
+          },
+          elements: {
+            point: {
+              radius: 2,
+              hoverRadius: 4
+            }
+          }
+        }
+      });
+      
+      // Create custom legend
+      createLegend(datasets);
+    }
+
+    function renderHeatmap(data, ctx, canvas) {
+      console.log('Rendering heatmap with', data.length, 'data points');
+      // Create a simple bar chart heatmap
+      const regions = [...new Set(data.map(d => d.region))];
+      
+      // Group data by hour for each region
+      const hourlyData = {};
+      data.forEach(d => {
+        const hour = new Date(d.timestamp).toISOString().slice(0, 13) + ':00:00Z';
+        if (!hourlyData[hour]) hourlyData[hour] = {};
+        if (!hourlyData[hour][d.region]) hourlyData[hour][d.region] = [];
+        hourlyData[hour][d.region].push(d.latency);
+      });
+      
+      const hours = Object.keys(hourlyData).sort();
+      const datasets = regions.map(region => {
+        const data = hours.map(hour => {
+          const latencies = hourlyData[hour][region] || [];
+          return latencies.length > 0 ? latencies.reduce((a, b) => a + b, 0) / latencies.length : 0;
+        });
+        
+        return {
+          label: region,
+          data: data.map((value, index) => ({ x: hours[index], y: value })),
+          backgroundColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+          borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+          borderWidth: 1
+        };
+      });
+      
+      // Set canvas size for heatmap
+      canvas.width = Math.max(700, hours.length * 50);
+      canvas.style.width = canvas.width + 'px';
+      
+      window.latencyTrendChart = new Chart(ctx, {
+        type: 'bar',
+        data: { datasets },
+        options: {
+          responsive: false,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: { display: false }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              time: { 
+                unit: 'hour',
+                tooltipFormat: 'MMM d, HH:mm'
+              },
+              title: { display: true, text: 'Time' },
+              display: true
+            },
+            y: {
+              title: { display: true, text: 'Average Latency (ms)' },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+      
+      createLegend(datasets);
+    }
+
+    function renderBoxPlot(data, ctx, canvas) {
+      console.log('Rendering boxplot with', data.length, 'data points');
+      
+      // Group data by region and calculate statistics
+      const regions = [...new Set(data.map(d => d.region))];
+      const regionStats = regions.map(region => {
+        const regionData = data.filter(d => d.region === region).map(d => d.latency);
+        const sorted = regionData.sort((a, b) => a - b);
+        const n = sorted.length;
+        
+        // Calculate statistics
+        const min = sorted[0];
+        const max = sorted[n - 1];
+        const median = sorted[Math.floor(n / 2)];
+        const q1 = sorted[Math.floor(n * 0.25)];
+        const q3 = sorted[Math.floor(n * 0.75)];
+        const mean = regionData.reduce((a, b) => a + b, 0) / n;
+        
+        return {
+          region,
+          min,
+          max,
+          median,
+          q1,
+          q3,
+          mean,
+          count: n
+        };
+      });
+      
+      // Create datasets for different statistics
+      const datasets = [
+        {
+          label: 'Min',
+          data: regionStats.map(stat => stat.min),
+          backgroundColor: '#4CAF50',
+          borderColor: '#4CAF50',
+          borderWidth: 2
+        },
+        {
+          label: 'Q1',
+          data: regionStats.map(stat => stat.q1),
+          backgroundColor: '#2196F3',
+          borderColor: '#2196F3',
+          borderWidth: 2
+        },
+        {
+          label: 'Median',
+          data: regionStats.map(stat => stat.median),
+          backgroundColor: '#FF9800',
+          borderColor: '#FF9800',
+          borderWidth: 3
+        },
+        {
+          label: 'Mean',
+          data: regionStats.map(stat => stat.mean),
+          backgroundColor: '#9C27B0',
+          borderColor: '#9C27B0',
+          borderWidth: 2
+        },
+        {
+          label: 'Q3',
+          data: regionStats.map(stat => stat.q3),
+          backgroundColor: '#2196F3',
+          borderColor: '#2196F3',
+          borderWidth: 2
+        },
+        {
+          label: 'Max',
+          data: regionStats.map(stat => stat.max),
+          backgroundColor: '#F44336',
+          borderColor: '#F44336',
+          borderWidth: 2
+        }
+      ];
+      
+      // Set canvas size for box plot
+      canvas.width = Math.max(700, regions.length * 120);
+      canvas.style.width = canvas.width + 'px';
+      
+      window.latencyTrendChart = new Chart(ctx, {
+        type: 'bar',
+        data: { 
+          labels: regions,
+          datasets 
+        },
+        options: {
+          responsive: false,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'top' },
+            title: { display: false },
+            tooltip: {
+              callbacks: {
+                afterBody: function(context) {
+                  const regionIndex = context[0].dataIndex;
+                  const stat = regionStats[regionIndex];
+                  return [
+                    `Count: ${stat.count} measurements`,
+                    `Range: ${stat.min} - ${stat.max} ms`
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'POPs' },
+              display: true
+            },
+            y: {
+              title: { display: true, text: 'Latency (ms)' },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+      
+      // Don't create custom legend since we're using Chart.js legend
+      document.getElementById('legend-container').innerHTML = '';
+    }
+
+    function createLegend(datasets) {
+      const legendContainer = document.getElementById('legend-container');
+      legendContainer.innerHTML = '';
+      datasets.forEach((dataset, index) => {
+        const legendItem = document.createElement('span');
+        legendItem.style.display = 'inline-block';
+        legendItem.style.margin = '0 10px 5px 0';
+        legendItem.style.fontSize = '0.9em';
+        legendItem.innerHTML = `
+          <span style="display:inline-block; width:12px; height:12px; background:${dataset.borderColor || dataset.backgroundColor}; margin-right:5px; border-radius:2px;"></span>
+          ${dataset.label}
+        `;
+        legendContainer.appendChild(legendItem);
+      });
+    }
+
     async function updateTotalCount() {
       try {
         const countRes = await fetch('https://whats-my-latency-worker.arungupta.workers.dev/trends-count');
@@ -75,6 +412,7 @@
       try {
         const res = await fetch(`https://whats-my-latency-worker.arungupta.workers.dev/trends?limit=${numResults}`);
         const data = await res.json();
+        currentData = data;
         window.lastTrendsData = data;
         
         // Update slider max value based on total available runs
@@ -92,77 +430,8 @@
           document.getElementById('num-results-value').textContent = totalRuns;
         }
         
-        // Make chart scrollable by setting dynamic width based on data points
-        const canvas = document.getElementById('latency-trend-chart');
-        const minWidthPerPoint = 12; // More space per data point for clarity
-        const dynamicWidth = Math.max(700, data.length * minWidthPerPoint);
-        canvas.width = dynamicWidth;
-        canvas.style.width = dynamicWidth + 'px';
-        
-        // Group by region
-        const regions = [...new Set(data.map(d => d.region))];
-        const datasets = regions.map(region => {
-          const regionData = data.filter(d => d.region === region);
-          return {
-            label: region,
-            data: regionData.map(d => ({ x: d.timestamp, y: d.latency })),
-            fill: false,
-            borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
-            tension: 0.2
-          };
-        });
-        const ctx = canvas.getContext('2d');
-        if (window.latencyTrendChart) window.latencyTrendChart.destroy();
-        window.latencyTrendChart = new Chart(ctx, {
-          type: 'line',
-          data: { datasets },
-          options: {
-            responsive: false,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { 
-                display: false
-              },
-              title: { display: false }
-            },
-            scales: {
-              x: {
-                type: 'time',
-                time: { 
-                  unit: 'minute',
-                  tooltipFormat: 'MMM d, HH:mm:ss'
-                },
-                title: { display: true, text: 'Timestamp' },
-                display: true
-              },
-              y: {
-                title: { display: true, text: 'Latency (ms)' },
-                beginAtZero: true
-              }
-            },
-            elements: {
-              point: {
-                radius: 2,
-                hoverRadius: 4
-              }
-            }
-          }
-        });
-        
-        // Create custom legend outside the chart
-        const legendContainer = document.getElementById('legend-container');
-        legendContainer.innerHTML = '';
-        datasets.forEach((dataset, index) => {
-          const legendItem = document.createElement('span');
-          legendItem.style.display = 'inline-block';
-          legendItem.style.margin = '0 10px 5px 0';
-          legendItem.style.fontSize = '0.9em';
-          legendItem.innerHTML = `
-            <span style="display:inline-block; width:12px; height:12px; background:${dataset.borderColor}; margin-right:5px; border-radius:2px;"></span>
-            ${dataset.label}
-          `;
-          legendContainer.appendChild(legendItem);
-        });
+        // Render chart based on current type
+        renderChart(data, currentChartType);
         
         spinner.style.display = 'none';
       } catch (e) {

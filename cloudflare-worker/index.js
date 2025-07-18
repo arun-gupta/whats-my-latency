@@ -25,11 +25,28 @@ export default {
       return new Response('OK');
     }
     if (request.method === 'GET' && url.pathname === '/trends') {
-      // Query the last 100 latency results, ordered by timestamp descending
+      // Support ?limit= parameter for number of results (default 100, min 10, max 1000)
+      let limit = parseInt(url.searchParams.get('limit') || '100', 10);
+      if (isNaN(limit) || limit < 10) limit = 10;
+      if (limit > 1000) limit = 1000;
       const { results } = await env.LATENCY_DB.prepare(
-        'SELECT timestamp, region, latency FROM latency_results ORDER BY timestamp DESC LIMIT 100'
-      ).all();
+        `SELECT timestamp, region, latency FROM latency_results ORDER BY timestamp DESC LIMIT ?`
+      ).bind(limit).all();
       return new Response(JSON.stringify(results), {
+        headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' },
+      });
+    }
+    if (request.method === 'GET' && url.pathname === '/trends-count') {
+      const { results } = await env.LATENCY_DB.prepare('SELECT COUNT(DISTINCT region) as count FROM latency_results').all();
+      const count = results && results[0] ? results[0].count : 0;
+      return new Response(JSON.stringify({ count }), {
+        headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' },
+      });
+    }
+    if (request.method === 'GET' && url.pathname === '/trends-data-count') {
+      const { results } = await env.LATENCY_DB.prepare('SELECT COUNT(DISTINCT strftime("%Y-%m-%d %H:%M", timestamp)) as count FROM latency_results').all();
+      const count = results && results[0] ? results[0].count : 0;
+      return new Response(JSON.stringify({ count }), {
         headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' },
       });
     }
