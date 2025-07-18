@@ -52,11 +52,13 @@ This project is a hands-on demonstration of Cloudflare's global edge network and
 
 ## 🚀 How It Works
 
-- The backend is a Cloudflare Worker (and AWS Lambda endpoints) that returns its POP/location and timestamp in a JSON response.
-- The frontend makes parallel requests to all endpoints, measures roundtrip times, and displays results in a table and on a map.
-- The map animates lines from each region to your location, just like in classic "WarGames" movies.
-- Click or keyboard-activate any region marker to replay the animation for that region.
-- Historical data is stored in Cloudflare D1 and visualized in an interactive, scrollable chart.
+- The backend (Cloudflare Worker and AWS Lambda endpoints) returns its POP/location and timestamp in a JSON response for each test.
+- The frontend makes parallel requests to all endpoints, measures roundtrip times, and displays results in a table and on an interactive map.
+- The map animates lines from each region to your location, and you can replay any region’s animation by clicking or using the keyboard.
+- All latency results are stored in Cloudflare D1 for historical analysis.
+- The frontend fetches historical data to display in a scrollable trends chart, supporting multiple chart types (line, heatmap, box plot) for comprehensive analysis and statistical insights.
+- Users can trigger new latency tests in real time, and the chart updates instantly with the latest results.
+- Smart validation ensures the chart only displays available data, and the UI is fully accessible and responsive.
 
 ---
 
@@ -149,157 +151,4 @@ A typical response from the Worker or Lambda endpoint:
   "country": "US"
 }
 ```
-- `pop`: The edge location that handled your request (e.g., SFO, LHR)
-- `timestamp`: The UTC time the request was processed
-- `cf_ray`: The Cloudflare Ray ID (includes POP code)
-- `country`: The detected country code
-
----
-
-## 📚 API Reference: Cloudflare Worker Endpoints
-
-### `GET /`
-
-Returns the POP (Point of Presence) and related info for the Cloudflare Worker handling your request.
-
-**Endpoint:**
-```
-https://whats-my-latency-worker.<your-subdomain>.workers.dev/
-```
-
-**Method:**
-- `GET`
-
-**Query Parameters:**
-- None
-
-**Response:**
-- `200 OK` — JSON object
-
-```json
-{
-  "pop": "SFO",
-  "timestamp": "2024-06-10T18:00:00Z",
-  "cf_ray": "7a1b2c3d4e5f1234-SFO",
-  "country": "US"
-}
-```
-
-| Field      | Type   | Description                                      |
-|------------|--------|--------------------------------------------------|
-| pop        | string | Cloudflare POP code (e.g., SFO, LHR)             |
-| timestamp  | string | UTC ISO timestamp of the request                 |
-| cf_ray     | string | Cloudflare Ray ID (includes POP code)            |
-| country    | string | ISO country code of the detected location        |
-
-**Example:**
-```
-curl https://whats-my-latency-worker.<your-subdomain>.workers.dev/
-```
-
-### `GET /trends`
-
-Returns latency test results for visualization in the frontend trends chart.
-
-**Query Parameters:**
-- `limit` (optional): Number of results to return (10-1000, default: 100)
-
-**Example:**
-```
-curl https://whats-my-latency-worker.<your-subdomain>.workers.dev/trends?limit=200
-```
-
-### `GET /trends-count`
-
-Returns the count of unique POPs (regions) available in the database.
-
-**Example:**
-```
-curl https://whats-my-latency-worker.<your-subdomain>.workers.dev/trends-count
-```
-
-### `GET /trends-data-count`
-
-Returns the count of unique test runs available in the database.
-
-**Example:**
-```
-curl https://whats-my-latency-worker.<your-subdomain>.workers.dev/trends-data-count
-```
-
-### `POST /trigger-latency-test`
-
-Manually triggers a new latency test to all regions and returns the results.
-
-**Example:**
-```
-curl -X POST https://whats-my-latency-worker.<your-subdomain>.workers.dev/trigger-latency-test
-```
-
----
-
-## 🧑‍💻 Accessibility & Responsiveness
-
-- All interactive elements are keyboard accessible and have ARIA labels.
-- Visible focus indicators for keyboard navigation.
-- Sufficient color contrast for all themes.
-- Fully responsive layout for mobile, tablet, and desktop.
-- Chart is horizontally scrollable for large datasets.
-
----
-
-## 📝 Project Phases
-
-### Phase 1 (Complete)
-- Cloudflare Worker backend that returns POP, timestamp, and related info
-- Setup and deployment instructions
-
-### Phase 2 (Complete)
-- Frontend UI with table, map, leaderboard, and full accessibility
-- Multi-region latency testing (Cloudflare + AWS Lambda)
-- Animated map visualization and interactive features
-- Error handling, user feedback, and theme support
-
-### Phase 3 (Complete)
-- Historical data storage in Cloudflare D1
-- Interactive trends chart with scrollable visualization
-- Multiple chart types (line, heatmap, box plot) for comprehensive data analysis
-- Real-time data updates and configurable time ranges
-- Enhanced UX with custom legends and smart validation
-- Statistical analysis with comprehensive latency distribution insights
-
----
-
-## 📷 Screenshots
-
-### Main Page
-![Main UI Screenshot](frontend/screenshots/main-ui.png)
-
-### Trends Page - Chart Types
-
-#### Line Chart
-Shows latency trends over time for each POP:
-![Line Chart Screenshot](frontend/screenshots/latency-line-chart.png)
-
-#### Heatmap
-Shows average latency by hour for each POP:
-![Heatmap Screenshot](frontend/screenshots/latency-heatmap.png)
-
-#### Box Plot
-Shows statistical distribution (min, Q1, median, mean, Q3, max) for each POP:
-![Box Plot Screenshot](frontend/screenshots/latency-box.png)
-
-> **Tip:**
-> - Screenshots are stored in the `frontend/screenshots/` directory.
-> - Use PNG or JPG format for best results.
-> - To update, replace the images with your own screenshots.
-
----
-
-## 📝 TODO
-
-- [ ] Set up a custom branded domain for the Cloudflare Pages site (e.g., whatmylatency.com or latency.yourbrand.com)
-
----
-
-**Enjoy measuring your latency around the world!** 
+- `
