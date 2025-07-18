@@ -60,6 +60,31 @@ This project is a hands-on demonstration of Cloudflare's global edge network and
 
 ---
 
+## 🛡️ Cloudflare Turnstile Integration
+
+This project uses [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) to protect the stats submission endpoint from abuse and bots.
+
+### How to Set Up Turnstile
+
+1. **Register your site** in the [Cloudflare Turnstile dashboard](https://dash.cloudflare.com/?to=/:account/turnstile) and get your **Site Key** and **Secret Key**.
+2. **Frontend:**
+   - In `frontend/index.html`, set your Site Key in the Turnstile widget:
+     ```html
+     <div class="cf-turnstile" data-sitekey="YOUR_SITE_KEY_HERE"></div>
+     ```
+   - (You have already set: `0x4AAAAAABlib5O3WAAktnD7`)
+3. **Worker:**
+   - In `cloudflare-worker/wrangler.toml`, add your Secret Key as an environment variable:
+     ```toml
+     [vars]
+     TURNSTILE_SECRET_KEY = "YOUR_SECRET_KEY_HERE"
+     ```
+   - The Worker will use this to verify Turnstile tokens on the `/stats` endpoint.
+
+**Note:** Never expose your Secret Key in frontend code or public repos.
+
+---
+
 ## 🖥️ Running the App Locally
 
 1. **Install [Node.js and npx](https://nodejs.org/)** if you haven't already.
@@ -278,30 +303,3 @@ Shows statistical distribution (min, Q1, median, mean, Q3, max) for each POP:
 ---
 
 **Enjoy measuring your latency around the world!** 
-
----
-
-## 🛡️ Cloudflare Turnstile Integration
-
-This project uses [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) to protect the stats submission endpoint from abuse and bots.
-
-### How to Set Up Turnstile
-
-1. **Register your site** in the [Cloudflare Turnstile dashboard](https://dash.cloudflare.com/?to=/:account/turnstile) and get your **Site Key** and **Secret Key**.
-2. **Frontend:**
-   - In `frontend/index.html`, set your Site Key in the Turnstile widget:
-     ```html
-     <div class="cf-turnstile" data-sitekey="YOUR_SITE_KEY_HERE"></div>
-     ```
-   - (You have already set: `0x4AAAAAABlib5O3WAAktnD7`)
-3. **Worker:**
-   - In `cloudflare-worker/wrangler.toml`, add your Secret Key as an environment variable:
-     ```toml
-     [vars]
-     TURNSTILE_SECRET_KEY = "YOUR_SECRET_KEY_HERE"
-     ```
-   - The Worker will use this to verify Turnstile tokens on the `/stats` endpoint.
-
-**Note:** Never expose your Secret Key in frontend code or public repos.
-
---- 
