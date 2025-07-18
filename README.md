@@ -26,9 +26,11 @@
 - **Automatic backend latency testing:** The backend runs latency tests to all regions every 3 minutes using Cloudflare Workers Cron Triggers.
 - **D1 database storage:** All latency results are stored in Cloudflare D1 for historical analysis.
 - **Interactive latency trends:** Scrollable chart showing historical latency data across all POPs with configurable time range (10-1000+ data points)
+- **Multiple chart types:** Line chart, heatmap, and statistical box plot for different data perspectives
 - **Custom legend:** Always-visible legend showing all POPs with color coding
 - **Real-time data updates:** "Run Latency Test Now" button triggers new tests and updates the chart
 - **Smart validation:** Slider automatically adjusts to available data range
+- **Statistical analysis:** Box plot shows min, Q1, median, mean, Q3, and max latency for each POP
 
 ---
 
@@ -90,12 +92,16 @@ This project is a hands-on demonstration of Cloudflare's global edge network and
 - **Error Handling**: If a region can't be reached, you'll see a clear error message and icon in the table.
 
 ### Trends Page
-- **Interactive Chart**: Scrollable chart showing historical latency data across all POPs
+- **Multiple Chart Types**: 
+  - **Line Chart**: Shows latency trends over time for each POP
+  - **Heatmap**: Shows average latency by hour for each POP
+  - **Box Plot**: Shows statistical distribution (min, Q1, median, mean, Q3, max) for each POP
 - **Configurable Range**: Use the slider to select 10-1000+ data points to display
 - **Real-time Updates**: Click "Run Latency Test Now" to trigger new tests and refresh the chart
 - **Custom Legend**: Always-visible legend showing all POPs with color coding
 - **Smart Validation**: Slider automatically adjusts to available data range
 - **Loading Feedback**: Visual spinner during data loading and chart updates
+- **Statistical Insights**: Box plot provides comprehensive latency distribution analysis
 
 ---
 
@@ -232,21 +238,36 @@ curl -X POST https://whats-my-latency-worker.<your-subdomain>.workers.dev/trigge
 ### Phase 3 (Complete)
 - Historical data storage in Cloudflare D1
 - Interactive trends chart with scrollable visualization
+- Multiple chart types (line, heatmap, box plot) for comprehensive data analysis
 - Real-time data updates and configurable time ranges
 - Enhanced UX with custom legends and smart validation
+- Statistical analysis with comprehensive latency distribution insights
 
 ---
 
 ## 📷 Screenshots
 
-Below is a screenshot of the main page:
-
+### Main Page
 ![Main UI Screenshot](frontend/screenshots/main-ui.png)
 
+### Trends Page - Chart Types
+
+#### Line Chart
+Shows latency trends over time for each POP:
+![Line Chart Screenshot](frontend/screenshots/latency-line-chart.png)
+
+#### Heatmap
+Shows average latency by hour for each POP:
+![Heatmap Screenshot](frontend/screenshots/latency-heatmap.png)
+
+#### Box Plot
+Shows statistical distribution (min, Q1, median, mean, Q3, max) for each POP:
+![Box Plot Screenshot](frontend/screenshots/latency-box.png)
+
 > **Tip:**
-> - Place your screenshot in the `frontend/screenshots/` directory as `main-ui.png`.
+> - Screenshots are stored in the `frontend/screenshots/` directory.
 > - Use PNG or JPG format for best results.
-> - To update, replace the placeholder image with your own screenshot.
+> - To update, replace the images with your own screenshots.
 
 ---
 
