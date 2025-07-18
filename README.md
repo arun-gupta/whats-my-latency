@@ -1,12 +1,14 @@
 # What's My Latency?
 
-**What's My Latency?** is a web app and Cloudflare Worker project that measures your real-time latency to multiple edge locations around the world. Instantly see which region is fastest for you, visualized in a beautiful, interactive UI.
+**What's My Latency?** is a web app and Cloudflare Worker project that measures your real-time latency to multiple edge locations around the world. Instantly see which region is fastest for you, visualized in a beautiful, interactive UI with historical trends.
 
 ---
 
 ## 🚀 Live Demo
 
 👉 [Try What's My Latency on Cloudflare Pages!](https://whats-my-latency.pages.dev/)
+
+📈 [View Latency Trends](https://whats-my-latency.pages.dev/trends.html)
 
 ## ✨ Features
 
@@ -21,22 +23,28 @@
 - **Responsive design**: Works great on desktop, tablet, and mobile
 - **Cloudflare Turnstile**: Privacy-first, user-friendly CAPTCHA to protect stats submission from bots and abuse
 - **Automatic CI/CD:** Every push to GitHub automatically deploys the latest version to Cloudflare Pages, ensuring the [live demo](https://whats-my-latency.pages.dev/) is always up to date.
+- **Automatic backend latency testing:** The backend runs latency tests to all regions every 3 minutes using Cloudflare Workers Cron Triggers.
+- **D1 database storage:** All latency results are stored in Cloudflare D1 for historical analysis.
+- **Interactive latency trends:** Scrollable chart showing historical latency data across all POPs with configurable time range (10-1000+ data points)
+- **Custom legend:** Always-visible legend showing all POPs with color coding
+- **Real-time data updates:** "Run Latency Test Now" button triggers new tests and updates the chart
+- **Smart validation:** Slider automatically adjusts to available data range
 
 ---
 
 ## 🌍 Why Cloudflare?
 
-This project is a hands-on demonstration of Cloudflare’s global edge network and developer platform:
+This project is a hands-on demonstration of Cloudflare's global edge network and developer platform:
 
 - **Global Reach:** Instantly test latency to Cloudflare POPs and AWS regions around the world, showing the power of a distributed edge.
 - **Real-Time Performance:** Experience how Cloudflare Workers deliver lightning-fast responses from the nearest location.
 - **Developer Platform:** Built using Cloudflare Workers, this app highlights how easy it is to deploy, scale, and run code at the edge with minimal setup.
 - **Interoperability:** Combines Cloudflare and AWS endpoints, showing how Cloudflare can be part of a multi-cloud or hybrid architecture.
-- **Modern Web Standards:** Uses Cloudflare’s support for modern JavaScript, APIs, and security best practices.
-- **User Experience:** Demonstrates how Cloudflare’s edge can power interactive, real-time, and globally accessible web apps.
-- **Security & Bot Protection:** Uses Cloudflare Turnstile for privacy-first, user-friendly CAPTCHA to protect endpoints from bots and abuse, showcasing Cloudflare’s security platform.
+- **Modern Web Standards:** Uses Cloudflare's support for modern JavaScript, APIs, and security best practices.
+- **User Experience:** Demonstrates how Cloudflare's edge can power interactive, real-time, and globally accessible web apps.
+- **Security & Bot Protection:** Uses Cloudflare Turnstile for privacy-first, user-friendly CAPTCHA to protect endpoints from bots and abuse, showcasing Cloudflare's security platform.
 
-> **Cloudflare isn’t just a CDN—it’s a platform for building the next generation of fast, secure, and global applications.**
+> **Cloudflare isn't just a CDN—it's a platform for building the next generation of fast, secure, and global applications.**
 
 ---
 
@@ -46,6 +54,7 @@ This project is a hands-on demonstration of Cloudflare’s global edge network a
 - The frontend makes parallel requests to all endpoints, measures roundtrip times, and displays results in a table and on a map.
 - The map animates lines from each region to your location, just like in classic "WarGames" movies.
 - Click or keyboard-activate any region marker to replay the animation for that region.
+- Historical data is stored in Cloudflare D1 and visualized in an interactive, scrollable chart.
 
 ---
 
@@ -70,6 +79,7 @@ This project is a hands-on demonstration of Cloudflare’s global edge network a
 
 ## 🕹️ Using the App
 
+### Main Page
 - The app will immediately test latency to all regions and display results in the table and on the map.
 - **Re-Test**: Click the "Re-Test" button to run the tests again.
 - **Theme Toggle**: Switch between Matrix, Classic, and Light themes (your choice is remembered).
@@ -78,6 +88,14 @@ This project is a hands-on demonstration of Cloudflare’s global edge network a
 - **Winner**: The fastest region is shown above the map after each test.
 - **Accessibility**: All features are keyboard accessible and screen reader friendly.
 - **Error Handling**: If a region can't be reached, you'll see a clear error message and icon in the table.
+
+### Trends Page
+- **Interactive Chart**: Scrollable chart showing historical latency data across all POPs
+- **Configurable Range**: Use the slider to select 10-1000+ data points to display
+- **Real-time Updates**: Click "Run Latency Test Now" to trigger new tests and refresh the chart
+- **Custom Legend**: Always-visible legend showing all POPs with color coding
+- **Smart Validation**: Slider automatically adjusts to available data range
+- **Loading Feedback**: Visual spinner during data loading and chart updates
 
 ---
 
@@ -107,7 +125,7 @@ A typical response from the Worker or Lambda endpoint:
 
 ---
 
-## 📚 API Reference: Cloudflare Worker Endpoint
+## 📚 API Reference: Cloudflare Worker Endpoints
 
 ### `GET /`
 
@@ -148,6 +166,45 @@ https://whats-my-latency-worker.<your-subdomain>.workers.dev/
 curl https://whats-my-latency-worker.<your-subdomain>.workers.dev/
 ```
 
+### `GET /trends`
+
+Returns latency test results for visualization in the frontend trends chart.
+
+**Query Parameters:**
+- `limit` (optional): Number of results to return (10-1000, default: 100)
+
+**Example:**
+```
+curl https://whats-my-latency-worker.<your-subdomain>.workers.dev/trends?limit=200
+```
+
+### `GET /trends-count`
+
+Returns the count of unique POPs (regions) available in the database.
+
+**Example:**
+```
+curl https://whats-my-latency-worker.<your-subdomain>.workers.dev/trends-count
+```
+
+### `GET /trends-data-count`
+
+Returns the count of unique test runs available in the database.
+
+**Example:**
+```
+curl https://whats-my-latency-worker.<your-subdomain>.workers.dev/trends-data-count
+```
+
+### `POST /trigger-latency-test`
+
+Manually triggers a new latency test to all regions and returns the results.
+
+**Example:**
+```
+curl -X POST https://whats-my-latency-worker.<your-subdomain>.workers.dev/trigger-latency-test
+```
+
 ---
 
 ## 🧑‍💻 Accessibility & Responsiveness
@@ -156,6 +213,7 @@ curl https://whats-my-latency-worker.<your-subdomain>.workers.dev/
 - Visible focus indicators for keyboard navigation.
 - Sufficient color contrast for all themes.
 - Fully responsive layout for mobile, tablet, and desktop.
+- Chart is horizontally scrollable for large datasets.
 
 ---
 
@@ -170,6 +228,12 @@ curl https://whats-my-latency-worker.<your-subdomain>.workers.dev/
 - Multi-region latency testing (Cloudflare + AWS Lambda)
 - Animated map visualization and interactive features
 - Error handling, user feedback, and theme support
+
+### Phase 3 (Complete)
+- Historical data storage in Cloudflare D1
+- Interactive trends chart with scrollable visualization
+- Real-time data updates and configurable time ranges
+- Enhanced UX with custom legends and smart validation
 
 ---
 
