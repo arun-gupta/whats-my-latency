@@ -3,20 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Latency Trends – What's My Latency?</title>
+  <title>Latency Trends of POPs – What's My Latency?</title>
   <link rel="stylesheet" href="style.css">
   <style>
     body { background: #181818; color: #00ff00; font-family: 'Fira Mono', monospace; }
     .trends-container { max-width: 800px; margin: 40px auto; background: #222; border-radius: 8px; box-shadow: 0 0 24px #000a; padding: 2rem; border: 2px solid #00ff00; }
     h1 { color: #39ff14; text-align: center; }
     a { color: #39ff14; }
+    .spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid #39ff14;
+      border-top: 3px solid #181818;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
   <div class="trends-container">
-    <h1>Latency Trends (Last 100 Results)</h1>
-    <canvas id="latency-trend-chart" width="700" height="350" style="background:#111; border-radius:8px;"></canvas>
+    <h1>Latency Trends of POPs</h1>
+    <div id="loading-spinner" aria-label="Loading" style="display:none; text-align:center; margin-bottom:1rem;"></div>
+    <div id="row-count" style="color:#39ff14; text-align:center; margin-bottom:1em; font-size:1.1em;">POP(s): ... | Available runs: ...</div>
+    <div id="legend-container" style="text-align:center; margin-bottom:1rem; padding:0.5rem; background:#111; border-radius:4px;"></div>
+    <div id="chart-container" style="overflow-x: auto; margin-bottom: 1rem;">
+      <canvas id="latency-trend-chart" width="1400" height="350" style="background:#111; border-radius:8px;"></canvas>
+    </div>
+    <div style="text-align:center; margin-bottom:1rem; font-size:0.9em; color:#888;">
+      💡 Chart is horizontally scrollable when showing many data points
+    </div>
     <div style="text-align:center; margin-top:2em;">
+      <label for="num-results" style="color:#39ff14;">Show last </label>
+      <input id="num-results" type="range" min="10" max="1000" value="100" step="1" style="vertical-align:middle;">
+      <span id="num-results-value" style="color:#39ff14; font-weight:bold; margin:0 8px;">100</span>
+      <label for="num-results" style="color:#39ff14;">results</label>
       <button id="trigger-latency-btn">Run Latency Test Now</button>
       <a href="index.html" style="margin-left:2em;">← Back to Main Page</a>
     </div>
@@ -24,14 +51,58 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <script>
-    async function fetchAndRenderTrends() {
+    async function updateTotalCount() {
       try {
-        const res = await fetch('https://whats-my-latency-worker.arungupta.workers.dev/trends');
+        const countRes = await fetch('https://whats-my-latency-worker.arungupta.workers.dev/trends-count');
+        const countData = await countRes.json();
+        // Get total available data points using the dedicated endpoint
+        const dataCountRes = await fetch('https://whats-my-latency-worker.arungupta.workers.dev/trends-data-count');
+        const dataCountData = await dataCountRes.json();
+        const totalPoints = dataCountData.count;
+        document.getElementById('row-count').textContent = `POP(s): ${countData.count} | Available runs: ${totalPoints}`;
+      } catch (e) {
+        document.getElementById('row-count').textContent = 'POP(s): ... | Available runs: ...';
+      }
+    }
+
+    async function fetchAndRenderTrends() {
+      const numResults = document.getElementById('num-results')?.value || 100;
+      document.getElementById('num-results-value').textContent = numResults;
+      const spinner = document.getElementById('loading-spinner');
+      spinner.innerHTML = '<span class="spinner"></span> <span>Loading trends...</span>';
+      spinner.style.display = 'flex';
+      
+      try {
+        const res = await fetch(`https://whats-my-latency-worker.arungupta.workers.dev/trends?limit=${numResults}`);
         const data = await res.json();
+        window.lastTrendsData = data;
+        
+        // Update slider max value based on total available runs
+        const slider = document.getElementById('num-results');
+        const currentValue = parseInt(slider.value);
+        // Get total runs for slider max validation
+        const totalRunsRes = await fetch('https://whats-my-latency-worker.arungupta.workers.dev/trends-data-count');
+        const totalRunsData = await totalRunsRes.json();
+        const totalRuns = totalRunsData.count;
+        slider.max = Math.max(totalRuns, 1000); // At least 1000, or actual total runs if higher
+        
+        // If current slider value exceeds total runs, adjust it
+        if (currentValue > totalRuns) {
+          slider.value = totalRuns;
+          document.getElementById('num-results-value').textContent = totalRuns;
+        }
+        
+        // Make chart scrollable by setting dynamic width based on data points
+        const canvas = document.getElementById('latency-trend-chart');
+        const minWidthPerPoint = 12; // More space per data point for clarity
+        const dynamicWidth = Math.max(700, data.length * minWidthPerPoint);
+        canvas.width = dynamicWidth;
+        canvas.style.width = dynamicWidth + 'px';
+        
         // Group by region
         const regions = [...new Set(data.map(d => d.region))];
         const datasets = regions.map(region => {
-          const regionData = data.filter(d => d.region === region).reverse();
+          const regionData = data.filter(d => d.region === region);
           return {
             label: region,
             data: regionData.map(d => ({ x: d.timestamp, y: d.latency })),
@@ -40,38 +111,74 @@
             tension: 0.2
           };
         });
-        const ctx = document.getElementById('latency-trend-chart').getContext('2d');
+        const ctx = canvas.getContext('2d');
         if (window.latencyTrendChart) window.latencyTrendChart.destroy();
         window.latencyTrendChart = new Chart(ctx, {
           type: 'line',
           data: { datasets },
           options: {
-            responsive: true,
+            responsive: false,
+            maintainAspectRatio: false,
             plugins: {
-              legend: { display: true },
+              legend: { 
+                display: false
+              },
               title: { display: false }
             },
             scales: {
               x: {
                 type: 'time',
-                time: { unit: 'minute', tooltipFormat: 'MMM d, HH:mm:ss' },
-                title: { display: true, text: 'Timestamp' }
+                time: { 
+                  unit: 'minute',
+                  tooltipFormat: 'MMM d, HH:mm:ss'
+                },
+                title: { display: true, text: 'Timestamp' },
+                display: true
               },
               y: {
                 title: { display: true, text: 'Latency (ms)' },
                 beginAtZero: true
               }
+            },
+            elements: {
+              point: {
+                radius: 2,
+                hoverRadius: 4
+              }
             }
           }
         });
+        
+        // Create custom legend outside the chart
+        const legendContainer = document.getElementById('legend-container');
+        legendContainer.innerHTML = '';
+        datasets.forEach((dataset, index) => {
+          const legendItem = document.createElement('span');
+          legendItem.style.display = 'inline-block';
+          legendItem.style.margin = '0 10px 5px 0';
+          legendItem.style.fontSize = '0.9em';
+          legendItem.innerHTML = `
+            <span style="display:inline-block; width:12px; height:12px; background:${dataset.borderColor}; margin-right:5px; border-radius:2px;"></span>
+            ${dataset.label}
+          `;
+          legendContainer.appendChild(legendItem);
+        });
+        
+        spinner.style.display = 'none';
       } catch (e) {
         const ctx = document.getElementById('latency-trend-chart').getContext('2d');
         ctx.font = '16px monospace';
         ctx.fillStyle = '#ff4444';
         ctx.fillText('Failed to load trends', 10, 50);
+        spinner.innerHTML = '<span style="color:#ff4444">Failed to load trends</span>';
+        setTimeout(() => { spinner.style.display = 'none'; }, 2000);
       }
     }
-    window.addEventListener('DOMContentLoaded', fetchAndRenderTrends);
+    window.addEventListener('DOMContentLoaded', () => {
+      updateTotalCount();
+      fetchAndRenderTrends();
+      document.getElementById('num-results').addEventListener('input', fetchAndRenderTrends);
+    });
     document.getElementById('trigger-latency-btn').onclick = async function() {
       this.disabled = true;
       this.textContent = 'Running...';
@@ -82,7 +189,11 @@
       console.log('Response body:', body);
       this.textContent = 'Run Latency Test Now';
       this.disabled = false;
-      fetchAndRenderTrends();
+      // Wait a moment for the data to be inserted, then refresh
+      setTimeout(() => {
+        updateTotalCount();
+        fetchAndRenderTrends();
+      }, 2000);
     };
   </script>
 </body>
