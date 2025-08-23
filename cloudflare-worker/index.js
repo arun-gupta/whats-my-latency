@@ -152,14 +152,23 @@ export default {
       return { region: endpoint.region, latency, timestamp: new Date().toISOString() };
     }
 
-    // Run latency tests to all endpoints every 3 minutes
+    // Run latency tests to all endpoints and collect results
+    const results = [];
     for (const endpoint of ENDPOINTS) {
       const result = await testLatency(endpoint);
       if (result.latency != null) {
-        await env.LATENCY_DB.prepare(
-          'INSERT INTO latency_results (timestamp, region, latency) VALUES (?, ?, ?)'
-        ).bind(result.timestamp, result.region, result.latency).run();
+        results.push(result);
       }
+    }
+
+    // Batch insert all results in a single operation
+    if (results.length > 0) {
+      const placeholders = results.map(() => '(?, ?, ?)').join(', ');
+      const values = results.flatMap(r => [r.timestamp, r.region, r.latency]);
+      
+      await env.LATENCY_DB.prepare(
+        `INSERT INTO latency_results (timestamp, region, latency) VALUES ${placeholders}`
+      ).bind(...values).run();
     }
   },
 }; 

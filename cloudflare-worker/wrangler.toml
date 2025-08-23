@@ -11,7 +11,7 @@ binding = "LATENCY_DB"
 database_name = "whats-my-latency"
 database_id = "212d9873-b7a8-432a-b526-09c9f8a4bca8" 
 [triggers]
-crons = ["*/3 * * * *"] 
+crons = ["0 * * * *"] 
 [observability.logs]
 enabled = true
 
